@@ -1,0 +1,19 @@
+#disable_html_escaping()
+#if ($value)
+  #if ($textOnly || $excelView) 
+    #foreach($AppLink in ${appLinkList})
+      $textutils.htmlEncode($!{AppLink.Label}):$textutils.htmlEncode($!{AppLink.URI});
+    #end
+  #else
+    #if (${appLinkList})
+      <table>
+        #foreach($AppLink in ${appLinkList})
+          <tr>
+            <td>$textutils.htmlEncode($!{AppLink.Label})</td>
+            <td>$textutils.htmlEncode($!{AppLink.URI})</td>
+          </tr>
+        #end
+      </table>
+    #end
+  #end
+#end

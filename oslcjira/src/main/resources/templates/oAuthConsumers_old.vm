@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xml:lang="en-US">
+<head>
+  <meta name="decorator" content="atl.admin" />  
+  $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+</head>
+<body>    
+
+  <style>
+    .oAuthConsumer table{
+      width: 100%;
+    }
+    .oAuthConsumer th{
+      color: #666666;
+      background-color: #EAEAEA;
+    }
+    .oAuthConsumer   {
+      width: 990px;
+    }
+    .oAuthConsumerTitle   {
+      background-color: #D6E9F6;
+      font-weight: bold;
+      height: 20px;
+  	  margin-bottom: 5px;
+      padding: 3px 6px 5px;
+    }
+    .oAuthConsumerHeading  {
+      font-weight: bold;
+      font-size:22px;
+      margin-left: 5px;
+    }
+    .description  {
+      margin-left: 5px;
+    }
+  </style>
+
+  <script type="text/javascript">
+
+  	function handleConsumer(idx, activateConsumer){	
+    	var xmlhttp;
+    	if (window.XMLHttpRequest) {
+    		xmlhttp=new XMLHttpRequest();
+    	}
+  
+    	var consumerKey = document.getElementById("consumer_key_"+idx).innerHTML.trim();
+    	if(activateConsumer) {
+    		xmlhttp.open("PUT", "${activateConsumerURL}" + consumerKey, true);
+    		xmlhttp.send();
+    
+    	}else {
+    		xmlhttp.open("DELETE", "${removeConsumerURL}" + consumerKey, true);
+    		xmlhttp.send();
+    	}
+    	
+    	xmlhttp.onreadystatechange=
+    		function() {
+    			if(xmlhttp.readyState==4) {
+    				if(xmlhttp.status==200) {
+    					window.location = "${OAuthConsumerPageURL}";
+    				} else {
+    					alert("Error " + xmlhttp.status + " - the action has not been done." );
+    				}
+    	     }
+    	  };    	
+  
+    }
+  </script>
+
+  <div class="oAuthConsumerHeading">
+  	OSLC - OAuth consumers administration
+  </div>
+
+  <div class="oAuthConsumer">
+    <div class="oAuthConsumerTitle">Provisional keys</div>
+    <div class="description">
+    Consumer can request provisional OAuth key which is not active until it is authorized. The following keys need to be authorized to be used as OAuth consumer keys.
+    </div>
+    #set($idx = 1) 
+    <table cellpadding="5">
+		<thead>
+		<tr>
+			<th id="name" align="left">Name</th>
+			<th id="consumer_key" align="left">Consumer key</th>
+			<th id="action" align="center" style="width:40px">Action</th>
+		</tr>
+		</thead>
+		<tbody>
+		#foreach( $consumer in ${consumers.provisionalConsumers})
+		<tr>
+			<td align="left">
+				<div id="consumer_name_${idx}">
+					${consumer.name}
+				</div>
+			</td>
+			<td align="left" >
+				<div id="consumer_key_${idx}">
+					${consumer.key}
+				</div>
+			</td>
+			<td align="center" >
+				<a id="addConsumer" href="javascript:handleConsumer(${idx},true);"><img alt="Add" width="16px" height="16px" src="${restURL}resources/add-16.gif" /></a>
+				<a id="removeConsumer" href="javascript:handleConsumer(${idx},false);"><img alt="Remove" width="16px" height="16px" src="${restURL}resources/remove-16.gif" /></a>
+			</td>
+		</tr>
+		#set($idx = $idx + 1) 
+		#end
+		</tbody>
+		</table>
+  </div>
+
+<br/><br/>
+  <div class="oAuthConsumer">
+    <div class="oAuthConsumerTitle">Authorized keys</div>
+     <div class="description">
+    The following keys are authorized for access on this server.
+    </div>
+    <table cellpadding="5">
+  		<thead>
+    		<tr>
+    			<th id="name" align="left">Name</th>
+    			<th id="consumer_key" align="left">Consumer key</th>
+    			<th id="action" align="center" style="width:40px">Action</th>
+    		</tr>
+  		</thead>
+  		<tbody>
+    		#foreach( $consumer in ${consumers.activeConsumers})
+      		<tr>
+      			<td align="left">
+      				<div id="consumer_name_${idx}">
+      					${consumer.name}
+      				</div>
+      			</td>
+      			<td align="left" >
+      				<div id="consumer_key_${idx}">
+      					${consumer.key}
+      				</div>
+      			</td>
+      			<td align="center" >
+      				<a id="removeConsumer" href="javascript:handleConsumer(${idx},false);"><img alt="Remove" width="16px" height="16px" src="${restURL}resources/remove-16.gif" /></a>
+      			</td>
+      		</tr>
+      		#set($idx = $idx + 1) 
+    		#end
+  		</tbody>
+		</table>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
+  <plugin-info>
+    <description>${project.description}</description>
+    <version>${project.version}</version>
+    <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+    <param name="plugin-icon">images/pluginIcon.png</param>
+    <param name="plugin-logo">images/pluginLogo.png</param>
+  </plugin-info>
+  
+  <!-- add our i18n resource -->
+  <resource type="i18n" name="i18n" location="RestExtension"/>
+  
+  <!-- add our web resources -->
+  <web-resource key="RestExtension-resources" name="RestExtension Web Resources">
+    <dependency>com.atlassian.auiplugin:ajs</dependency>
+    <resource type="download" name="images/" location="/images"/>
+    <context>RestExtension</context>
+  </web-resource>
+  
+  <!-- Components -->
+  <component key="ao-accessor" name="Active Objects Accessor" 
+             class="com.ericsson.jira.oslc.resources.ao.AOAccessorImpl" public="true">
+    <interface>com.ericsson.jira.oslc.resources.ao.AOAccessor</interface>
+  </component>
+  
+  <!-- import from the product container -->
+  <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
+  <component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer" filter=""/>
+  <component-import key="userManager" interface="com.atlassian.sal.api.user.UserManager"/>
+  <component-import key="loginUriProvider" interface="com.atlassian.sal.api.auth.LoginUriProvider"/>
+  <component-import key="ao" name="Active Objects service" interface="com.atlassian.activeobjects.external.ActiveObjects">
+    <description>Component to access Active Objects functionality from the plugin</description>
+  </component-import>
+  
+  <!-- import components -->
+  <component-import key="eventPublisher" interface="com.atlassian.event.api.EventPublisher"/>
+  
+
+  <!-- REST -->
+  <rest name="Jira Rest Resource" i18n-name-key="jira-rest-resource.name" key="jira-rest-resource" path="/jirarestresource" version="1.0">
+    <description key="jira-rest-resource.description">Jira Rest Resource Plugin</description>
+  </rest>
+  
+  <!-- Filter -->
+  <servlet-filter name="CredentialsService" key="credentialsfilter-servlet" class="com.ericsson.jira.oslc.servlet.CredentialsFilter" location="after-encoding" weight="63">
+    <description>Credentials Service</description>    
+    <!--url-pattern>/rest/jirarestresource/1.0/oauth/authorize</url-pattern-->
+    <url-pattern>/rest/jirarestresource/1.0/oauth/requestToken</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oauth/accessToken</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oauth/requestKey</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oauth/authorizationexternalcallback</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/rootservices</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oauth/internal/approveToken</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oauth/login</url-pattern>    
+    <url-pattern>/rest/jirarestresource/1.0/*/changeRequests*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/catalog/*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/issueTypes*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/issuePriorities*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/issueStates*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/issueResolutions*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/serviceProviders*</url-pattern>
+           
+    <dispatcher>REQUEST</dispatcher>
+  </servlet-filter>
+  
+  <servlet-filter name="JiraUserService" key="JiraUserFilter-servlet" class="com.ericsson.jira.oslc.servlet.JiraUserFilter" location="before-decoration" weight="63">
+    <description>Jira User Service</description>
+    <url-pattern>/plugins/servlet/jiraservlet/addoslclinkdialog</url-pattern>
+    <url-pattern>/plugins/servlet/jiraservlet/selectissue</url-pattern>
+    <url-pattern>/plugins/servlet/jiraservlet/createissue</url-pattern>
+    <url-pattern>/plugins/servlet/jiraservlet/OAuthConsumerServlet</url-pattern>
+    <url-pattern>/plugins/servlet/jiraservlet/RootServicesManagementServlet</url-pattern>
+    <url-pattern>/plugins/servlet/jiraservlet/ProjectRelationshipsServlet</url-pattern>
+    <url-pattern>/plugins/servlet/jiraservlet/ServiceProviderCatalogsManagementServlet</url-pattern>
+    <url-pattern>/plugins/servlet/jiraservlet/PluginConfigurationServlet</url-pattern>
+    <url-pattern>/plugins/servlet/jiraservlet/LeanSyncConfigServlet</url-pattern>
+        
+    <url-pattern>/rest/jirarestresource/1.0/oauth/consumers/*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oauth/rootserviceslinks/removelink/*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oauth/serviceprovidercatalogslinks/removelink/*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oauth/serviceproviderslinks/removelink/*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oslc/links/removeFromRemoteApp*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oslc/links/removeFromJira*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oslc/links/addToRemoteApp*</url-pattern>
+    <url-pattern>/rest/jirarestresource/1.0/oslc/links/addToJira*</url-pattern>
+                                                                              
+    <url-pattern>/rest/jirarestresource/1.0/oauth/authorizationcallback</url-pattern>   
+    <url-pattern>/rest/jirarestresource/1.0/*/changeRequests*</url-pattern> 
+    
+    <url-pattern>/rest/jirarestresource/1.0/oauth/authorize</url-pattern>
+                      
+    <dispatcher>REQUEST</dispatcher>
+  </servlet-filter>
+  
+  <!-- Servlets -->
+  <servlet name="Create Issue Servlet" i18n-name-key="create-issue-servlet.name" key="create-issue-servlet" class="com.ericsson.jira.oslc.servlet.CreateIssueServlet">
+    <description key="create-issue-servlet.description">Servlet for getting create issue dialog.</description>
+    <url-pattern>/jiraservlet/createissue</url-pattern>
+  </servlet>
+  <servlet name="Select Issue Servlet" i18n-name-key="select-issue-servlet.name" key="select-issue-servlet" class="com.ericsson.jira.oslc.servlet.SelectIssueServlet">
+    <description key="select-issue-servlet.description">Servlet for getting issue select dialog.</description>
+    <url-pattern>/jiraservlet/selectissue</url-pattern>
+  </servlet>
+  <servlet name="OAuthConsumerServlet" i18n-name-key="oauth-consumer-servlet.name" key="oauth-consumer-servlet" class="com.ericsson.jira.oslc.servlet.OAuthConsumerServlet">
+    <description key="oauth-consumer-servlet.description">OAuth consumer management</description>
+    <url-pattern>/jiraservlet/OAuthConsumerServlet</url-pattern>
+  </servlet>
+  <servlet name="RootServicesManagementServlet" i18n-name-key="rootservices-management-servlet.name" 
+        key="rootservices-management-servlet" class="com.ericsson.jira.oslc.servlet.RootServicesManagementServlet">
+    <description key="rootservices-management-servlet.description">Root services management</description>
+    <url-pattern>/jiraservlet/RootServicesManagementServlet</url-pattern>
+  </servlet>
+  <servlet name="ProjectRelationshipsServlet" i18n-name-key="project-relationships-servlet.name" 
+        key="project-relationships-servlet" class="com.ericsson.jira.oslc.servlet.ProjectRelationshipsServlet">
+    <description key="project-relationships-servlet.description">Project relationships management</description>
+    <url-pattern>/jiraservlet/ProjectRelationshipsServlet</url-pattern>
+  </servlet>
+  <servlet name="Add OSLC Link Dialog Servlet" i18n-name-key="add-oslc-link-dialog-servlet.name" key="add-oslc-link-dialog-servlet" class="com.ericsson.jira.oslc.servlet.AddOslcLinkDialogServlet">
+    <description key="add-oslc-link-dialog-servlet.description">The Add OSLC Link Dialog Servlet </description>
+    <url-pattern>/jiraservlet/addoslclinkdialog</url-pattern>
+  </servlet>
+  <servlet name="ServiceProviderCatalogsManagementServlet" 
+            i18n-name-key="serviceproviderctalogs-management-servlet.name" 
+            key="serviceproviderctalogs-management-servlet" 
+            class="com.ericsson.jira.oslc.servlet.ServiceProviderCatalogsManagementServlet">
+    <description key="serviceproviderctalogs-management-servlet.description">Service provider catalogs management page</description>
+    <url-pattern>/jiraservlet/ServiceProviderCatalogsManagementServlet</url-pattern>
+  </servlet>
+  <servlet name="PluginConfigurationServlet" i18n-name-key="plugin-configuration-servlet.name" 
+        key="plugin-configuration-servlet" class="com.ericsson.jira.oslc.servlet.PluginConfigurationServlet">
+    <description key="plugin-configuration-servlet.description">Plugin configuration</description>
+    <url-pattern>/jiraservlet/PluginConfigurationServlet</url-pattern>
+  </servlet>
+    <servlet name="SyncConfigServlet" i18n-name-key="sync-configuration-servlet.name" 
+        key="sync-configuration-servlet" class="com.ericsson.jira.oslc.servlet.SyncConfigServlet">
+    <description key="sync-configuration-servlet.description">Synchronization configuration</description>
+    <url-pattern>/jiraservlet/SyncConfigServlet</url-pattern>
+  </servlet>
+  
+  <!-- Custom fields -->
+  <customfield-type name="oslc Links" i18n-name-key="oslc-links.name" key="oslc-links" class="com.ericsson.jira.oslc.customfields.OSLCLink">
+    <description key="oslc-links.description">The oslc links module</description>
+    <resource name="view" type="velocity" location="/templates/view-oslclinks.vm"/>
+    <resource name="edit" type="velocity" location="/templates/view-oslclinks_edit.vm"/>
+    <resource name="xml" type="velocity" location="/templates/view-oslclinks_xml.vm"/>
+    <resource name="column-view" type="velocity" location="/templates/view-oslclinks_columns.vm"/>
+    <tooltip key="oslc-links.tooltip"/>
+  </customfield-type>
+  
+  <!-- Web sections & items (menus) -->
+  <web-section key="oslc-section" name="OSLC Section" location="admin_plugins_menu" i18n-name-key="webfragments.oslc.section" weight="1000">
+    <label>OSLC</label>
+    <description>OSLC configurations</description>
+    <tooltip>OSLC configurations</tooltip>
+  </web-section>
+  <web-item key="oslc-oauth-consumers-link" name="OSLC OAuth Consumers" section="admin_plugins_menu/oslc-section" i18n-name-key="webfragments.oslc.item" weight="12">
+    <label>OAuth consumers</label>
+    <description>OAuth consumer management</description>
+    <link linkId="oslc.oauth.consumers.link">/plugins/servlet/jiraservlet/OAuthConsumerServlet</link>
+  </web-item>
+  <web-item key="oslc-rootservices-management-link" name="OSLC Root Services management" 
+    section="admin_plugins_menu/oslc-section" i18n-name-key="webfragments.oslc.item" weight="12">
+    <label>Root services</label>
+    <description>Root services management</description>
+    <link linkId="oslc.rootservices.management.link">/plugins/servlet/jiraservlet/RootServicesManagementServlet</link>
+  </web-item>
+  <web-item key="oslc-sp-catalogs-link" name="OSLC Service provider catalogs management" 
+    section="admin_plugins_menu/oslc-section" i18n-name-key="webfragments.oslc.item" weight="12">
+    <label>Service provider catalogs</label>
+    <description>Service provider catalogs management</description>
+    <link linkId="oslc.rootservices.management.link">/plugins/servlet/jiraservlet/ServiceProviderCatalogsManagementServlet</link>
+  </web-item>
+  <web-item key="oslc-projects-relationships-link" name="OSLC Project relationships" 
+    section="admin_plugins_menu/oslc-section" i18n-name-key="webfragments.oslc.item" weight="12">
+    <label>Project relationships</label>
+    <description>Project relationships</description>
+    <link linkId="oslc.projects.relationships.link">/plugins/servlet/jiraservlet/ProjectRelationshipsServlet</link>
+  </web-item>
+  <web-item name="External Link" i18n-name-key="add-oslc-link.name" key="add-oslc-link" section="operations-operations" weight="1000">
+    <description key="add-oslc-link.description">The addOslcLink dialog</description>
+    <label key="add-oslc-link.label"/>
+    <link linkId="add-oslc-link-link">/plugins/servlet/jiraservlet/addoslclinkdialog?issuekey=${issue.key}</link>
+    <tooltip key="add-oslc-link.tooltip"/>
+    <styleClass>trigger-dialog</styleClass>
+  </web-item>
+  <web-item key="oslc-plugin-configuration-link" name="Plugin configuration" 
+    section="admin_plugins_menu/oslc-section" i18n-name-key="webfragments.oslc.item" weight="12">
+    <label>Plugin configuration</label>
+    <description>Plugin configuration</description>
+    <link linkId="oslc.plugin.configuration.link">/plugins/servlet/jiraservlet/PluginConfigurationServlet</link>
+  </web-item>
+  <web-item key="syncconfiguration-link" name="Synchronization configuration" 
+    section="admin_plugins_menu/oslc-section" i18n-name-key="webfragments.oslc.item" weight="12">
+    <label>LeanSync configuration</label>
+    <description>LeanSync configuration</description>
+    <link linkId="oslc.sync.configuration.link">/plugins/servlet/jiraservlet/SyncConfigServlet</link>
+  </web-item>
+  
+  <!-- Active objects -->
+  <ao key="ao-module">
+    <description>The module configuring the Active Objects service used by this plugin</description>
+    <entity>com.ericsson.jira.oslc.resources.ao.RootServicesEntity</entity>
+    <entity>com.ericsson.jira.oslc.resources.ao.ServiceProvEntity</entity>
+    <entity>com.ericsson.jira.oslc.resources.ao.OAuthConsmrEntity</entity>
+    <entity>com.ericsson.jira.oslc.resources.ao.ConfigClobEntity</entity>
+    <entity>com.ericsson.jira.oslc.resources.ao.ConfigEntity</entity>
+  </ao>
+  
+  <!-- Issue events listener -->
+  <component key="eventListener" class="com.ericsson.jira.oslc.events.IssueEventsHandler">
+    <description>Class that processes the incoming JIRA issue events.</description>
+  </component>
+  
+  
+</atlassian-plugin>

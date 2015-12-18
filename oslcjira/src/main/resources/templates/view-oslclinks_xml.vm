@@ -1,0 +1,15 @@
+#disable_html_escaping()
+#if ($value)
+  #if (${displayParameters.excel_view})
+    $textutils.br($textutils.htmlEncode($!value.toString(), false))
+  #else
+    #if (${appLinkList})
+        #foreach($AppLink in ${appLinkList})
+            <externalLink>
+                <label>$!{AppLink.Label}</label>
+                <link>$!{AppLink.URI}</link>
+            </externalLink>
+        #end
+    #end
+  #end
+#end

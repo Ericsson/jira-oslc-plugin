@@ -1,0 +1,34 @@
+<html>
+	<head>
+		<title>Change Request:</title>
+		<meta name="decorator" content="atl.general">
+	</head>
+	<body>
+		<table>
+			<tr>
+				<th>Status:</th>
+				<td>$status</td>
+				<th>Project:</th>
+				<td>$project</td>
+			</tr>
+			<tr>
+				<th>Assignee:</th>
+				<td>$assignee</td>
+				<th>Resolution:</th>
+				<td>$resolution</td>
+			</tr>
+			<tr>
+				<th>Priority:</th>
+				<td>$priority</td>
+				<th>Creator:</th>
+				<td>$creator</td>
+			</tr>
+			<tr>
+				<th>Reported:</th>
+				<td>$reported</td>
+				<th>Modified:</th>
+				<td>$modified</td>
+			</tr>
+		</table>
+	</body>
+</html>

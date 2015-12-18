@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xml:lang="en-US">
+
+<head>
+  <title>Root services</title>
+  <meta name="decorator" content="atl.admin" />  
+  $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+</head>
+
+<body>    
+
+  <style>
+    .oAuthConsumer table{
+      width: 100%;
+    }
+    .oAuthConsumer th{
+      color: #666666;
+      background-color: #EAEAEA;
+    }
+    .oAuthConsumer   {
+      width: 990px;
+    }
+    .oAuthConsumerTitle   {
+      background-color: #D6E9F6;
+      font-weight: bold;
+      height: 20px;
+      margin-bottom: 5px;
+      padding: 3px 6px 5px;
+    }
+    .oAuthConsumerHeading  {
+      font-weight: bold;
+      font-size:22px;
+      margin-left: 5px;
+    }
+    .description  {
+      margin-left: 5px;
+    }
+    
+    #rsform .field-group label sup {
+        color: red;
+    }
+    
+    .fwarning {
+        color: red;
+    }
+  </style>
+
+  <script type="text/javascript">
+    function resetWarning(w) {
+        w.style.visibility = "hidden";
+        w.innerHTML = "";
+    }
+    
+    function setWarning(w, text) {
+        w.style.visibility = "visible";
+        w.innerHTML = text;
+    }
+    
+    function basicCheck(value, warning_field, warning_text) {
+        resetWarning(warning_field);
+        if (value == null || value == "") {
+            setWarning(warning_field, warning_text);
+            return false;
+        }
+    }
+
+    function pswCheck(value, expected, warning_field, warning_text) {
+        resetWarning(warning_field);
+        if (value != null && value != "" && value == expected) {
+            return true;
+        }
+        else {
+            setWarning(warning_field, warning_text);
+            return false;
+        }
+    }
+    
+    function validateForm() {
+        //var errorMsgElement = document.getElementById("request-acces-button_w").innerHTML = "";
+
+        var result = true;
+        
+        if (basicCheck(document.forms["rsform"]["title"].value, 
+                       document.getElementById("title_w"), "You must enter title!") == false)
+            result = false;
+        
+        if (basicCheck(document.forms["rsform"]["rsuri"].value, 
+                       document.getElementById("rsuri_w"), "You must enter root services URI!") == false)
+            result = false;
+            
+        if (basicCheck(document.forms["rsform"]["oauthsecret"].value, 
+                       document.getElementById("oauthsecret_w"), "You must enter consumer secret!") == false)
+            result = false;
+        
+        if (pswCheck(document.forms["rsform"]["oauthsecret"].value, 
+                     document.forms["rsform"]["oauthsecret2"].value,
+                     document.getElementById("oauthsecret2_w"), "Secret doesn't match!") == false)
+            result = false;
+            
+        return result;
+    }
+    
+    function handleEntry(id) { 
+        var xmlhttp;
+        if (window.XMLHttpRequest) {
+            xmlhttp = new XMLHttpRequest();
+        }
+        
+        xmlhttp.open("DELETE", "${removeRSLinkURL}" + id, true);
+        xmlhttp.send();
+        
+        xmlhttp.onreadystatechange = 
+            function() {
+                if (xmlhttp.readyState == 4) {
+                    if (xmlhttp.status == 200) {
+                        window.location = "${RSManagementURL}";
+                    } 
+                    else {
+                        alert("Removing root service failed!\nError " + xmlhttp.status + ": " + xmlhttp.responseText);
+                    }
+                }
+            };
+    }
+    
+    window.onload = function() {
+        #set($errorMsgWithHtml = $errorMsg)
+        var errMsg = "${errorMsgWithHtml}";
+        if (errMsg != null && errMsg != "") {
+            alert(errMsg);
+        }
+    }
+    
+  </script>
+
+  <div class="oAuthConsumerHeading">
+    OSLC - Root services management
+  </div>
+
+  <div class="oAuthConsumer">
+    <div class="oAuthConsumerTitle">Remote server specification</div>
+    
+    <div class="description">
+    Specify server for server-to-server communication. Enter root services URI and code phrase for
+    oAuth authentication. Request access to selected server to get consumer key and store server
+    to friends list.
+    </div>
+    
+    <form id="rsform" action="" method="post" class="aui" autocomplete="off" onsubmit="return validateForm()">
+        <div class="field-group">
+            <label for="title"><sup>*</sup>Title:</label>
+            <input type="text" id="title" name="title" class="text" autocomplete="off">
+            <div id="title_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        <div class="field-group">
+            <label for="rsuri"><sup>*</sup>Root services URI:</label>
+            <input type="text" id="rsuri" name="rsuri" class="text" autocomplete="off">
+            <div id="rsuri_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        <div class="field-group">
+            <label for="oauthsecret"><sup>*</sup>OAuth secret:</label>
+            <input type="password" id="oauthsecret" name="oauthsecret" class="text" autocomplete="off">
+            <div id="oauthsecret_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        <div class="field-group">
+            <label for="oauthsecret2"><sup>*</sup>Re-type secret:</label>
+            <input type="password" id="oauthsecret2" name="oauthsecret2" class="text" autocomplete="off">
+            <div id="oauthsecret2_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        <!-- not used
+        <div class="field-group">
+            <label for="trusted">Trusted:</label>
+            <input type="checkbox" id="trusted" name="trusted">
+        </div>
+        -->
+        <table cellpadding="2">
+            <tbody>
+                <tr>
+                    <td align="left">
+                      <input id="request-acces-button" class="button" type="submit" value="Request Access" />
+                    </td>
+                    <!--td align="left">
+                          <div id="request-acces-button_w" class="fwarning">${errorMsg}</div>
+                    </td-->
+              	</tr>
+            </tbody> 
+        </table>
+    </form>   
+  </div>
+
+  <br/><br/>
+  
+  <div class="oAuthConsumer">
+    <div class="oAuthConsumerTitle">Server friends list</div>
+    
+    <div class="description">
+    The list of stored servers.
+    </div>
+    
+    <table cellpadding="5">
+        <thead>
+            <tr>
+                <th id="t_title" align="left">Title</th>
+                <th id="t_rsuri" align="left">Root services URI</th>
+                <th id="t_consumerkey" align="left">OAuth consumer key</th>
+                <th id="t_remove"></th>
+            </tr>
+        </thead>
+        <tbody>
+            #foreach($entity in ${entities})
+            <tr>
+                <td align="left">
+                    $!entity.getTitle()
+                </td>
+                <td align="left">
+                    $!entity.getRootServicesURI()
+                </td>
+                <td align="left">
+                    $!entity.getConsumerKey()
+                </td>
+                <td>
+                    <a id="remove_rs" href="javascript:handleEntry(${entity.getID()});">
+                        <img alt="Remove" width="16px" height="16px" src="/images/icons/cancel.png" />
+                    </a>
+                </td>
+            </tr>
+            #end
+        </tbody>
+    </table>
+    
+  </div>
+
+</body>
+</html>

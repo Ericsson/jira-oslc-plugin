@@ -1,0 +1,637 @@
+$webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+
+<style>
+    #scrolling_content {
+        width: 95%;
+        height: 200px;
+        overflow: auto;
+    }
+    
+    #OSLC_providers_table tr {
+        height: 40px;
+        vertical-align: middle;
+    }
+    
+    #waiting_animation_main {
+        width: 36px;
+        height: 36px;
+        overflow: hidden;
+        position: absolute;
+        top:0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+    }
+    .title {
+      font-weight: bold;
+      font-size:14px;
+      margin-left: 8px;
+
+    }
+    
+</style>
+
+<div class="jira-dialog-heading">
+    <font size="5">External link</font>  
+</div> 
+
+<div id="description" class="title">
+    Select the external system  
+</div>
+
+<br/>
+
+<div id="scrolling_content"> 
+    <table id="OSLC_providers_table" class="issue-table">
+        <tbody>
+            #foreach(${oneOSLCprovider} in ${OSLCproviders})
+                <tr class="issuerow" >
+                    <td id="${oneOSLCprovider.ProviderLink}">${oneOSLCprovider.Label}</td>
+                </tr>
+            #end
+        </tbody>
+    </table>
+</div>
+
+<br>
+
+<table id="inputtable" style="width:80%">
+    <!--thead>
+        <tr>
+            <th title="OSLC provider" style="visibility:hidden;">Oslc Providers</th>
+            <th title="OSLC provider URL" style="visibility:hidden;">URI</th>         
+        </tr>
+    </thead-->
+    
+    <tbody>
+        <tr>
+            <td>
+                <input class="aui" id="createOrExistingRadio_ExistingIssue" type="radio" name="createOrExisting" value="ExistingIssue" checked="true"> Existing Issue
+            </td>
+            <td align="right">
+                <select id="ObjectTypeExistingIssue" style="width: 100%"></select>
+            </td>
+            <td>
+            <span id="waiting_animation_existing" style="visibility:hidden;">
+                <img alt="Waiting" width="16px" height="16px" src="/images/icons/wait.gif" />
+            </span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input id="createOrExistingRadio_NewIssue" type="radio" name="createOrExisting" value="NewIssue"> New Issue
+            </td>
+            <td align="right">
+                <select id="ObjectTypeNewIssue" style="width: 100%"></select>
+            </td>
+            <td>
+            <span id="waiting_animation_create" style="visibility:hidden;">
+                <img alt="Waiting" width="16px" height="16px" src="/images/icons/wait.gif" />
+            </span>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<br />
+<br />
+
+<div class="buttons-container form-footer">
+    <div class="buttons">
+    <button id="CreateOslcLink" class="aui-button" onclick="createOslcLink()">Create</button>
+    <a class="aui-button aui-button-link cancel" title="Press Alt+Shift+` to cancel" href="${baseURL}/browse/${issueKey}" accesskey="`"> Cancel</a>    
+    </div>
+</div>
+
+<div id="waiting_animation_main" style="visibility: hidden;">
+    <img alt="Waiting" width="32px" height="32px" src="/images/icons/wait-large.gif" />
+</div>
+
+
+<script type="text/javascript">
+    
+    // on page loading
+    makeSelectable();   //make table(s) selectable
+    addNoContentToSelects();    //add default options to combos
+    
+    // global variables
+    
+    var selected_service_provider_URL = "";
+    var external_provider_issue_URL = "";    
+    
+    var selected_external_issue_URL = "";
+    var selected_external_issue_label = "";
+    
+    var oneProviderTypes_selectionDialogs = [];
+    var oneProviderTypes_creationDialogs = [];
+    var popup;
+    var popupID = "";
+        
+//---------------------------------------------------------------------------------------------------------
+
+    function showElement(element) {
+        if (element != null) {
+            element.style.visibility = "visible";
+        }
+    }
+    
+    function hideElement(element) {
+        if (element != null) {
+            element.style.visibility = "hidden";
+        }
+    }
+    
+    function showMainAnimation() {
+        var anim = document.getElementById("waiting_animation_main");
+        showElement(anim);
+    }
+    
+    function hideMainAnimation() {
+        var anim = document.getElementById("waiting_animation_main");
+        hideElement(anim);
+    }
+    
+    function showTypesAnimations() {
+        var anim1 = document.getElementById("waiting_animation_existing");
+        var anim2 = document.getElementById("waiting_animation_create");
+        showElement(anim1);
+        showElement(anim2);
+    }
+    
+    function hideTypesAnimations() {
+        var anim1 = document.getElementById("waiting_animation_existing");
+        var anim2 = document.getElementById("waiting_animation_create");
+        hideElement(anim1);
+        hideElement(anim2);
+    }
+    
+//---------------------------------------------------------------------------------------------------------
+
+    function addNoContentToSelects()
+    { 
+        //clean comboboxes
+        var ExistingIssueSelect = document.getElementById("ObjectTypeExistingIssue");
+        var NewIssueSelect = document.getElementById("ObjectTypeNewIssue");
+        
+        ExistingIssueSelect.options.length = 0;
+        NewIssueSelect.options.length = 0;
+        
+        // add new values to comboboxes
+        var option = document.createElement("option");
+        option.text = "Select type";
+        ExistingIssueSelect.add(option);
+            
+        option = document.createElement("option");
+        option.text = "Select type";
+        NewIssueSelect.add(option);
+    }
+
+//---------------------------------------------------------------------------------------------------------
+
+    function checkCanCreateLink() {
+        var canCreateLink = false;
+        if (selected_service_provider_URL != "") {
+            var RadioButton = document.getElementById("createOrExistingRadio_ExistingIssue");
+            if (RadioButton.checked) {
+                var ExistingIssueSelect = document.getElementById("ObjectTypeExistingIssue");
+                if (ExistingIssueSelect.value != "") {
+                    canCreateLink = true;
+                }
+            }
+            else {
+                var NewIssueSelect = document.getElementById("ObjectTypeNewIssue");
+                if (NewIssueSelect.value != "") {
+                    canCreateLink = true;  
+                }
+            }
+        }
+        return canCreateLink;
+    }
+
+//---------------------------------------------------------------------------------------------------------
+
+    function selectRow(idx) {
+        var t = document.getElementById('OSLC_providers_table');
+        var tb = t.tBodies[0]; //assume 1 tbody
+        var i;
+        var selectedRow;
+        
+        for (i=0; i<tb.rows.length; i++) {
+            var row = tb.rows[i];
+            
+            var cn = row.className;
+            var thc = " focused";
+            var start_idx = cn.indexOf(thc);
+            if (start_idx == -1 && i == (idx)) {
+                cn += thc;
+                selectedRow = row;
+            }
+            else { 
+                cn = cn.replace(thc, "");
+            }
+            row.className = cn;
+        }
+        
+        selected_service_provider_URL = selectedRow.cells[0].id;
+        
+        //alert(selected_service_provider_URL);
+        FetchProviderTypes();
+    }
+
+//---------------------------------------------------------------------------------------------------------   
+
+    function makeSelectable() {                        
+        var table = document.getElementById('OSLC_providers_table'); 
+        var tb = table.tBodies[0]; //assume 1 tbody
+        
+        var i;
+        for (i=0; i<tb.rows.length; i++) 
+        {
+            var row = tb.rows[i];
+            
+            var j;
+            for (j=0; j<row.cells.length; j++) 
+            {
+                var cell = row.cells[j]; 
+                cell.addEventListener('click', function () {
+                        selectRow(this.parentNode.rowIndex);                           
+                    }
+                );
+            }
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------------
+
+    function FetchProviderTypes() {
+        // clear selected provider arrays 
+        oneProviderTypes_creationDialogs.length = 0;
+        oneProviderTypes_selectionDialogs.length = 0;
+        
+        if (selected_service_provider_URL == "") {
+            return;
+        }
+        
+        //add new fetched provider types values
+        var xmlhttpPro;
+        if (window.XMLHttpRequest) {
+            xmlhttpPro = new XMLHttpRequest();
+        }
+          
+        var ourResponse = "NOTHNG";
+        var urlTopost = "${restURL}" + "${getOslcLinkTypes}" + "?" + "uri=" + selected_service_provider_URL;
+          
+        xmlhttpPro.onreadystatechange=function() 
+        {
+            if (xmlhttpPro.readyState == 4)
+            {
+                if (xmlhttpPro.status == 200) 
+                {
+                    var text = xmlhttpPro.responseText;
+                    var jsonObj = JSON.parse(text);
+                    var i = 0;
+                    
+                    for (i = 0; i < (Object.keys(jsonObj.creationDialogs).length); i++)      
+                    {
+                        var oneType = [jsonObj.creationDialogs[i].type, jsonObj.creationDialogs[i].link, jsonObj.creationDialogs[i].width, jsonObj.creationDialogs[i].height];            
+                        oneProviderTypes_creationDialogs.push(oneType);
+                    }
+                    
+                    for (i = 0; i < (Object.keys(jsonObj.selectionDialogs).length); i++)
+                    {
+                        var oneType = [jsonObj.selectionDialogs[i].type, jsonObj.selectionDialogs[i].link, jsonObj.selectionDialogs[i].width, jsonObj.selectionDialogs[i].height];            
+                        oneProviderTypes_selectionDialogs.push(oneType);                             
+                    }
+                    
+                    saveTypesToHTML();
+                    
+                    hideTypesAnimations();
+                }
+                else if (xmlhttpPro.status == 401)
+                {   
+                    var dlgw = 600;
+                    var dlgh = 400;
+                    
+                    var recall = "FetchProviderTypes()";
+                    var target = "$!{oauthcallback2}?targeturl=" + selected_service_provider_URL + "&recall=" + recall;
+                    
+                    var dlgW = window.open(
+                        target,
+                        "User authorization",
+                        "location=no,scrollbars=no,resizable=yes,menubar=no,toolbar=no,width=" + dlgw + ",height=" + dlgh
+                    );
+                    
+                    hideTypesAnimations();
+                }
+                else 
+                {
+                    alert("Fetching service provider failed!\nError: " + xmlhttpPro.status);
+                    hideTypesAnimations();
+                }
+            }
+        };
+
+        showTypesAnimations();
+        
+        xmlhttpPro.open("GET", urlTopost , true);  	            	            
+        xmlhttpPro.send();             
+    }
+        
+//---------------------------------------------------------------------------------------------------------
+
+    function saveTypesToHTML() {
+        //clean comboboxes
+        var ExistingIssueSelect = document.getElementById("ObjectTypeExistingIssue");
+        var NewIssueSelect = document.getElementById("ObjectTypeNewIssue");
+        
+        ExistingIssueSelect.options.length = 0;
+        NewIssueSelect.options.length = 0;
+        
+        // add new values to comboboxes                      
+        for (index = 0; index < oneProviderTypes_selectionDialogs.length; index++) {
+            var option = document.createElement("option");
+            option.text = oneProviderTypes_selectionDialogs[index][0];
+            ExistingIssueSelect.add(option);
+        }
+       
+        for (ii = 0; ii < oneProviderTypes_creationDialogs.length; ii++) {
+            var option = document.createElement("option");
+            option.text = oneProviderTypes_creationDialogs[ii][0];
+            NewIssueSelect.add(option);
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------------        
+
+    function createOslcLink() {
+        if (!checkCanCreateLink()) {
+            alert("Can not create link, please select OSLC provider");
+            return;
+        }
+        
+        var dialogVidth;
+        var dialogHight;
+        var selected_type_URL = "";                            
+        var radioButton = document.getElementById("createOrExistingRadio_ExistingIssue");
+        var selectedItem;   
+        
+        if (radioButton.checked) {
+            // get selected Type
+            var existingIssueSelect = document.getElementById("ObjectTypeExistingIssue");                    
+            // get selected type data
+            selectedItem = existingIssueSelect.options[existingIssueSelect.selectedIndex].value;
+                  
+            // Get all data from inner structure according selected values 
+            for (index2 = 0; index2 < oneProviderTypes_selectionDialogs.length; index2++) {
+                if(selectedItem == oneProviderTypes_selectionDialogs[index2][0] ) {
+                     selected_type_URL = oneProviderTypes_selectionDialogs[index2][1]; 
+                     dialogVidth = oneProviderTypes_selectionDialogs[index2][2]; 
+                     dialogHight = oneProviderTypes_selectionDialogs[index2][3];                                                
+                     break;
+                }
+            }
+        }
+        else {
+            // get selected Type
+            var newIssueSelect = document.getElementById("ObjectTypeNewIssue");                
+            // get selected type data
+            selectedItem = newIssueSelect.options[newIssueSelect.selectedIndex].value;
+            
+            // Get all data from inner structure according selected values 
+            for (index2 = 0; index2 < oneProviderTypes_creationDialogs.length; index2++) {
+                if (selectedItem == oneProviderTypes_creationDialogs[index2][0] ) {
+                    selected_type_URL = oneProviderTypes_creationDialogs[index2][1]; 
+                    dialogVidth = oneProviderTypes_creationDialogs[index2][2]; 
+                    dialogHight = oneProviderTypes_creationDialogs[index2][3];                                     
+                    break;
+                }
+            }
+        }
+        
+        //Add OSLC_Ji_plugin_ prefix to popup name 
+        popupID = "OSLC_Jira_plugin_" + selectedItem;
+        openExternalPage(selectedItem, selected_type_URL, dialogVidth, dialogHight);                                        
+    }
+
+//---------------------------------------------------------------------------------------------------------        
+
+    // After plugin gets message from remote app, it has to add issue link to remote app object
+    // and remote object link to issue.
+    function addLinkToJiraOslcLinks() { 
+
+        // First try to add link to remote application.
+
+        var xmlhttp;
+        if (window.XMLHttpRequest) {
+            xmlhttp = new XMLHttpRequest();
+        }
+
+        var urlTopost = "${restURL}" + "${addOslcLinkToRemoteAppURL}" + "?" + "jiraissuekey=${issueKey}&uritoadd=" + selected_external_issue_URL + "&label=" + selected_external_issue_label;
+
+        //handle 1st http
+        xmlhttp.onreadystatechange = function() 
+        {
+            if (xmlhttp.readyState == 4)
+            {
+                if (xmlhttp.status == 200) 
+                {
+                    //alert("Success (1)!");
+                    
+                    //Adding to remote application succeed. Try to add link to Jira.
+                    
+                    var xmlhttp2;
+                    if (window.XMLHttpRequest) {
+                        xmlhttp2 = new XMLHttpRequest();
+                    }
+                    
+                    var urlTopost2 = "${restURL}" + "${addOslcLinkToJiraURL}" + "?" + "jiraissuekey=${issueKey}&uritoadd=" + selected_external_issue_URL + "&label=" + selected_external_issue_label;
+                    
+                    //handle 2nd hhtp
+                    xmlhttp2.onreadystatechange = function() 
+                    {
+                        if (xmlhttp2.readyState == 4)
+                        {
+                            if (xmlhttp2.status == 200) 
+                            {
+                                //alert("Success (2)!");
+                                window.location.reload(true);
+                            }
+                            else
+                            {
+                                var message = getMessageFromRespond(xmlhttp2);                                
+                                alert("Adding link to Jira failed!\n\n" + message);
+                                window.location.reload(true);
+                            }
+                        }
+                    };
+                    
+                    xmlhttp2.open("POST", urlTopost2, true);
+                    xmlhttp2.send();
+                }
+                else if (xmlhttp.status == 401) {
+                    var dlgw = 600;
+                    var dlgh = 400;
+                    
+                    var recall = "addLinkToJiraOslcLinks()";
+                    var target = "${oauthcallback2}?targeturl=" + selected_external_issue_URL + "&recall=" + recall;
+                    
+                    var dlgW = window.open(
+                        target,
+                        "User authorization",
+                        "location=no,scrollbars=no,resizable=yes,menubar=no,toolbar=no,width=" + dlgw + ",height=" + dlgh
+                    );
+                }
+                else
+                {
+                    //Adding to remote app failed. Ask for continue adding.
+                    var message = getMessageFromRespond(xmlhttp);
+                    var res = confirm("Adding to remote application failed!\n\n" + message + "\nDo you still want to add link?");
+                    if (res == true)
+                    {
+                        var xmlhttp2;
+                        if (window.XMLHttpRequest) {
+                            xmlhttp2 = new XMLHttpRequest();
+                        }
+                        
+                        var urlTopost2 = "${restURL}" + "${addOslcLinkToJiraURL}" + "?" + "jiraissuekey=${issueKey}&uritoadd=" + selected_external_issue_URL + "&label=" + selected_external_issue_label;
+                        
+                        //handle 2nd http
+                        xmlhttp2.onreadystatechange = function() 
+                        {
+                            if (xmlhttp2.readyState == 4)
+                            {
+                                if (xmlhttp2.status == 200) 
+                                {
+                                    window.location.reload(true);
+                                }
+                                else
+                                {
+                                    alert("Adding link to Jira failed!\nError: " + xmlhttp.status);
+                                    window.location.reload(true);
+                                }
+                            }
+                        };
+                        
+                        xmlhttp2.open("POST", urlTopost2, true);
+                        xmlhttp2.send();
+                    }
+                    else
+                    {
+                        window.location.reload(true);                   
+                    }
+                }
+            }
+        }; //end of handle 1st http
+        showMainAnimation();
+        //after external system response, disable 'Create' button
+        document.getElementById("CreateOslcLink").disabled = true;
+        xmlhttp.open("POST", urlTopost , true);
+        xmlhttp.send();
+    }
+
+//---------------------------------------------------------------------------------------------------------
+
+    // open external page of external provider
+    function openExternalPage(title, URL, width, hight) {
+        if (popup != null) {
+					 closeExternalPage();
+        }
+        
+        popup = new AJS.Dialog({
+            width: (width + 5), 
+            height: (hight + 5), 
+            id: popupID, 
+            closeOnOutsideClick: true,
+        });
+             		
+        var content = "<iframe src=\"" + URL + "\" style=\"width:" + width + ";height:" + hight + ";border-style:solid;border-width:0px\"></iframe>";
+        
+        popup.addPanel("Panel 1", content, "panel-body");
+        popup.show();
+        
+	    var marginLeft_value = width;
+        var marginTop_value = hight;
+        
+        if (typeof width == "string") {
+            if(width.length > 2)
+            marginLeft_value = width.substr(0,width.length - 2);
+        }
+        
+        if (typeof hight == "string") {
+            if(hight.length > 2)
+            marginTop_value = hight.substr(0,hight.length - 2);
+        }
+        
+        marginLeft_value =  parseInt(marginLeft_value);
+        marginTop_value =  parseInt(marginTop_value);  
+        
+        if (typeof marginLeft_value == "number" && typeof marginTop_value == "number") { 
+            marginLeft_value = (marginLeft_value / 2) * -1;
+            marginTop_value = (marginTop_value / 2) * -1;           
+            
+            var aa = document.getElementById(popupID);  
+            aa.style.marginLeft = marginLeft_value.toString() + "px";             
+            aa.style.marginTop  = marginTop_value.toString() + "px"; 
+        }
+    }
+
+//---------------------------------------------------------------------------------------------------------
+
+    function closeExternalPage() {
+        popup.remove();
+        popup = null;
+    }
+
+//---------------------------------------------------------------------------------------------------------  
+    /**
+    * This function handles message, which comes back from external system's dialog.
+    * Message carries oslc, with information for further linking.
+    */
+    window.addEventListener('message', 
+        function (event) {
+            //alert("Message comes");
+            closeExternalPage();
+            
+            var message = event.data;
+            if (message.indexOf("oslc-response:") > -1) {
+                message = message.substring(14);
+            }
+            else {
+                alert('Error: Return message should start with "oslc-response:".');
+                return;
+            }
+            handleMessage(message);
+        }
+    , false);
+
+//---------------------------------------------------------------------------------------------------------  
+
+    // get message from external page with link and label to external provider issue
+    function handleMessage(message) {
+        //extract data and put them to global variables
+        var json = eval('('+ message +')');
+        if(json['oslc:results'].length > 0){
+	        selected_external_issue_URL = json['oslc:results'][0]['rdf:resource'];
+	        selected_external_issue_label = json['oslc:results'][0]['oslc:label'];
+	        //add extracted data to issue as link
+	        addLinkToJiraOslcLinks();
+        }
+
+    }
+    
+//---------------------------------------------------------------------------------------------------------
+
+    function getMessageFromRespond(xmlhttp_obj) {
+        //alert("getMessageFromRespond 0");
+        if (xmlhttp_obj != null){
+            if (xmlhttp_obj.responseText != null) {
+                return xmlhttp_obj.responseText;
+            }
+            else {
+                return "";
+            }
+        }
+    }
+
+</script>

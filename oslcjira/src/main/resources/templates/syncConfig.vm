@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xml:lang="en-US">
+<head>
+  <title>LeanSync configuration</title>
+  <meta name="decorator" content="atl.admin" />  
+  $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+</head>
+<body>  
+  <style>
+    .adminpage table{
+      width: 100%;
+    }
+    .adminPage th{
+      color: #666666;
+      background-color: #EAEAEA;
+    }
+    .adminPage   {
+      width: 990px;
+    }
+    .adminPageTitle   {
+      background-color: #D6E9F6;
+      font-weight: bold;
+      height: 20px;
+      margin-bottom: 5px;
+      padding: 3px 6px 5px;
+    }
+    .adminPageHeading  {
+      font-weight: bold;
+      font-size:22px;
+      margin-left: 5px;
+    }
+    .description  {
+      margin-left: 5px;
+    }
+
+  </style>
+  
+    <script type="text/javascript">
+
+
+    window.onload = function() {
+        //check for error
+        var errMsg = "${errorMsg}";
+        if (errMsg != null && errMsg != "") {
+            alert(unescapeHTML(errMsg));
+        }
+        
+        var debugMode = "${debug}";
+        if(debugMode != null && debugMode == "true"){
+        		document.getElementById("submitConfiguration").disabled = true;
+        }
+        
+    }
+
+		function unescapeHTML(value) {
+		    if ((typeof value === "string") && (new RegExp(/&amp;|&lt;|&gt;|&quot;|&#39;/).test(value))) {
+		        return value.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&#39;/g, "'");
+		    }
+		
+		    return value;
+		}
+
+    
+  </script>
+
+   
+	  <div class="adminPageHeading">
+  	LeanSync configuration
+   </div>
+ 
+	<div class="adminPage">
+    <div class="adminPageTitle">Mapping configuration</div>
+    <div class="description">
+   	 Define the field mapping  for inbound and outbound connections.
+    </div>
+    <form id="confForm" action="" method="post" class="aui">
+    <div>
+    	<textarea id="mappingConfiguration" name="mappingConfiguration" rows="30" style="width:98%" >${mappingConfiguration}</textarea>
+    </div>
+    <div>
+      <input id="submitConfiguration" class="button" type="submit" value="Save changes" />
+    </div>
+    	
+    </form>
+
+
+  </div>
+</body>
+</html>

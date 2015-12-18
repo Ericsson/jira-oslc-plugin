@@ -1,0 +1,232 @@
+<html>
+
+<head>
+    <title>Select issue</title>
+    <meta name="decorator" content="popup" />
+    
+    <style>
+        #whole {
+            /* width: 880px; */
+            background: white;
+        }
+        
+        #issuetable {
+          width: 870px;
+          table-layout: fixed;
+          border-collapse: collapse;
+          /* border: 1px solid green; */
+        }
+        #issuetable th,
+        #issuetable td {
+          /* padding: 5px; */
+          text-align: left;
+          /* border-right: 1px solid blue; */
+        }
+        /* Type */
+        #issuetable td:nth-child(1),
+        #issuetable th:nth-child(1) {
+          width: 25px;
+        }
+        /* Key */
+        #issuetable td:nth-child(2),
+        #issuetable th:nth-child(2) {
+          width: 115px;
+        }
+        /* Priority */
+        #issuetable td:nth-child(3),
+        #issuetable th:nth-child(3) {
+          width: 85px;
+        }
+        /* Summary */
+        #issuetable td:nth-child(4),
+        #issuetable th:nth-child(4) {
+          width: 220px;
+        }
+        /* Reporter */
+        #issuetable td:nth-child(5),
+        #issuetable th:nth-child(5) {
+          width: 100px;
+        }
+        /* Status */
+        #issuetable td:nth-child(6),
+        #issuetable th:nth-child(6) {
+          width: 95px;
+        }
+        /* Created date */
+        #issuetable td:nth-child(7),
+        #issuetable th:nth-child(7) {
+          width: 200px;
+        }
+        #issuetable thead tr {
+          width: 864px;
+          display: block;
+          position: relative;
+          background: #cccccc;
+        }
+        #issuetable tbody {
+          display: block;
+          overflow: auto;
+          width: 100%;
+          height: 475px;
+          height: 20px\9;
+        }
+
+        #buttons_panel {
+            width: 100%;
+        }
+        
+        .to_right {
+            float: right;
+            margin-right: 20px;
+        }
+        
+        .fwarning {
+            color: red;
+            padding-right: 10px;
+        }
+    </style>
+    
+    <script>
+        function selectRow(idx) {
+            var t = document.getElementById('issuetable');
+            var tb = t.tBodies[0]; //assume 1 tbody
+            var i;
+            var selectedRow;
+            
+            for (i=0; i<tb.rows.length; i++) {
+                var row = tb.rows[i];
+                
+                var cn = row.className;
+                var thc = " focused";
+                var start_idx = cn.indexOf(thc);
+                if (start_idx == -1 && i == (idx-1))
+                {
+                    cn += thc;
+                    selectedRow = row;
+                }
+                else 
+                    cn = cn.replace(thc, "");
+                
+                row.className = cn;
+            }
+            
+            var key = selectedRow.cells[1].innerHTML
+            var target = document.getElementById('issueKey');
+            target.value = key;
+        }
+        
+        function makeSelectable(table) {
+            var tb = table.tBodies[0]; //assume 1 tbody
+            
+            var i;
+            for (i=0; i<tb.rows.length; i++) {
+                var row = tb.rows[i];
+                
+                var j;
+                for (j=0; j<row.cells.length; j++) {
+                    var cell = row.cells[j];
+                    
+                    cell.addEventListener('click',
+                        function () {
+                            selectRow(this.parentNode.rowIndex);                           
+                        }
+                    );
+                }
+            }
+        }
+        
+        function resetWarning(w) {
+            w.style.visibility = "hidden";
+            w.innerHTML = "";
+        }
+        
+        function setWarning(w, text) {
+            w.style.visibility = "visible";
+            w.innerHTML = text;
+        }
+        
+        function validateForm() {
+            var wrn = document.getElementById("select_warning");
+            resetWarning(wrn);
+            
+            var val = document.getElementById("issueKey").value;
+            if (val == "-1") {
+                setWarning(wrn, "Nothing selected!");
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        
+        window.onload = function () {
+            var t = document.getElementById('issuetable');
+            //makeSortable(t);
+            makeSelectable(t);
+        };
+    </script>
+</head>
+
+<body class="styled">
+
+<div id="whole">
+    <div class="jira-dialog-heading">
+        <h2 title="Select Issue">Select Issue</h2>
+    </div>
+    
+    <table id="issuetable">
+        <thead>
+            <tr class="rowHeader">
+                <th class="colHeaderLink" title="Type">T</th>
+                <th class="colHeaderLink" title="Key">Key</th>
+                <th class="colHeaderLink" title="Priority">Priority</th>
+                <th class="colHeaderLink" title="Summary">Summary</th>
+                <th class="colHeaderLink" title="Reporter">Reporter</th>
+                <th class="colHeaderLink" title="Status">Status</th>
+                <th class="colHeaderLink" title="Created date">Created date</th>
+            </tr>
+        </thead>
+        <tbody>
+            #set($ids = $issueManager.getIssueIdsForProject($projectId))
+            #foreach($id in $ids)
+                #set($issue = $issueManager.getIssueObject($id))
+                #if($issue.getIssueTypeId() == $issueType)
+                    <tr class="issuerow">
+                        <td class="issuetype" title="$!issue.getIssueTypeObject().getName()">
+                            <img src="$!issue.getIssueTypeObject().getIconUrl()" />
+                        </td>
+                        <td class="issuekey">$!issue.getKey()</td>
+                        <td class="priority">$!issue.getPriorityObject().getName()</td>
+                        <td class="summary">$!issue.getSummary()</td>
+                        <td class="reporter">$!issue.getReporterId()</td>
+                        <td class="status">$!issue.getStatusObject().getName()</td>
+                        <td class="created">$dateFormatter.format($!issue.getCreated())</td>
+                        
+                        <!--
+                        <td class="assignee"></td>
+                        <td class="resolution"></td>
+                        <td class="updated"></td>
+                        <td class="duedate"></td>
+                        <td class="issue_actions"></td>
+                        -->
+                    </tr>
+                #end
+            #end
+        </tbody>
+    </table>
+    
+    <form action="" method="post" class="aui" onsubmit="return validateForm()">
+        <input type="hidden" id="projectId" name="projectId" value="$projectId">
+        <input type="hidden" id="issueKey" name="issueKey" value="-1">
+        <div class="buttons_panel">
+            <div class="to_right">
+                <span id="select_warning" class="fwarning" style="visibility: hidden;"></span>
+                <input id="select-issue-submit" class="button" type="submit" value="Select">
+            </div>
+        </div>
+    </form>
+</div>
+
+</body>
+
+</html>

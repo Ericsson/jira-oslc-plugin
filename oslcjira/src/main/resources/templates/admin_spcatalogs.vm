@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xml:lang="en-US">
+
+<head>
+  <title>Service provider catalogs</title>
+  <meta name="decorator" content="atl.admin" />
+</head>
+
+<body>    
+
+  <style>
+    .oAuthConsumer table{
+      width: 100%;
+    }
+    .oAuthConsumer th{
+      color: #666666;
+      background-color: #EAEAEA;
+    }
+    .oAuthConsumer   {
+      width: 990px;
+    }
+    .oAuthConsumerTitle   {
+      background-color: #D6E9F6;
+      font-weight: bold;
+      height: 20px;
+      margin-bottom: 5px;
+      padding: 3px 6px 5px;
+    }
+    .oAuthConsumerHeading  {
+      font-weight: bold;
+      font-size:22px;
+      margin-left: 5px;
+    }
+    .description  {
+      margin-left: 5px;
+    }
+    
+    #spcform {
+        width: 100%;
+    }
+        
+    #spcform .field-group {
+        width: 100%;
+    }
+    
+    #spcform .field-group label {
+        width: 25%;
+        display: inline-block;
+        text-align: right;
+        padding-right: 5px;
+    }
+        
+    #spcform .field-group input {
+        width: 50%;
+        display: inline-block;
+    }
+    
+    #spcform .field-group label sup {
+        color: red;
+    }
+    
+    .fwarning {
+        padding-left: 70px;
+        color: red;
+    }
+  </style>
+
+  <script type="text/javascript">
+    function resetWarning(w) {
+        w.style.visibility = "hidden";
+        w.innerHTML = "";
+    }
+    
+    function setWarning(w, text) {
+        w.style.visibility = "visible";
+        w.innerHTML = text;
+    }
+    
+    function basicCheck(value, warning_field, warning_text) {
+        resetWarning(warning_field);
+        if (value == null || value == "") {
+            setWarning(warning_field, warning_text);
+            return false;
+        }
+    }
+
+    function pswCheck(value, expected, warning_field, warning_text) {
+        resetWarning(warning_field);
+        if (value == null || value == "" || value != expected) {
+            setWarning(warning_field, warning_text);
+            return false;
+        }
+        return true;
+    }
+    
+    function validateForm() {
+        var result = true;
+        
+        if (basicCheck(document.forms["spcform"]["title"].value, 
+                       document.getElementById("title_w"), "You must enter title!") == false)
+            result = false;
+        
+        if (basicCheck(document.forms["spcform"]["spcuri"].value, 
+                       document.getElementById("spcuri_w"), "You must enter catalor URI!") == false)
+            result = false;
+            
+        if (basicCheck(document.forms["spcform"]["oauthconsumerkey"].value, 
+                       document.getElementById("oauthconsumerkey_w"), "You must enter consumer key!") == false)
+            result = false;
+            
+        if (basicCheck(document.forms["spcform"]["oauthconsumersecret"].value, 
+                       document.getElementById("oauthconsumersecret_w"), "You must enter consumer secret!") == false)
+            result = false;
+        
+        if (pswCheck(document.forms["spcform"]["oauthsecret2"].value, 
+                     document.forms["spcform"]["oauthconsumersecret"].value,
+                     document.getElementById("oauthsecret2_w"), "Secret doesn't match!") == false)
+            result = false;
+        
+        if (basicCheck(document.forms["spcform"]["oauthdomain"].value, 
+                       document.getElementById("oauthdomain_w"), "You must enter OAuth domain!") == false)
+            result = false;
+            
+        return result;
+    }
+    
+    function handleEntry(id) { 
+        var xmlhttp;
+        if (window.XMLHttpRequest) {
+            xmlhttp = new XMLHttpRequest();
+        }
+        
+        xmlhttp.open("DELETE", "${removeSPCLink}" + id, true);
+        xmlhttp.send();
+        
+        xmlhttp.onreadystatechange = 
+            function() {
+                if (xmlhttp.readyState == 4) {
+                    if (xmlhttp.status == 200) {
+                        window.location = "${catalogsManagementPage}";
+                    } 
+                    else {
+                        alert("Error " + xmlhttp.status + " - the action has not been done." );
+                    }
+                }
+            };
+    }
+    
+    window.onload = function() {
+        #set($errorMsgWithHtml = $errorMsg)
+        var errMsg = "${errorMsgWithHtml}";
+        if (errMsg != null && errMsg != "") {
+            alert(errMsg);
+        }
+    }
+  </script>
+
+  <div class="oAuthConsumerHeading">
+    OSLC - Service provider catalogs management
+  </div>
+
+  <div class="oAuthConsumer">
+    <div class="oAuthConsumerTitle">Service provider catalog specification</div>
+    
+    <div class="description">
+    Specify service provider catalog. Enter catalog URI, consumer key, consumer secret and URIs for
+    OAuth authentication.
+    </div>
+    
+    <form id="spcform" action="" method="post" class="aui" autocomplete="off" onsubmit="return validateForm()">
+        <div class="field-group">
+            <label for="title"><sup>*</sup>Title:</label>
+            <input type="text" id="title" name="title" class="text" autocomplete="off">
+            <div id="title_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        <div class="field-group">
+            <label for="spcuri"><sup>*</sup>Service provider catalog URI:</label>
+            <input type="text" id="spcuri" name="spcuri" class="text" autocomplete="off">
+            <div id="spcuri_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        <div class="field-group">
+            <label for="oauthconsumerkey"><sup>*</sup>OAuth consumer key:</label>
+            <input type="text" id="oauthconsumerkey" name="oauthconsumerkey" class="text" autocomplete="off">
+            <div id="oauthconsumerkey_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        <div class="field-group">
+            <label for="oauthconsumersecret"><sup>*</sup>OAuth consumer secret:</label>
+            <input type="password" id="oauthconsumersecret" name="oauthconsumersecret" class="text" autocomplete="off">
+            <div id="oauthconsumersecret_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        <div class="field-group">
+            <label for="oauthsecret2"><sup>*</sup>Re-type secret:</label>
+            <input type="password" id="oauthsecret2" name="oauthsecret2" class="text" autocomplete="off">
+            <div id="oauthsecret2_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        
+        <div class="field-group">
+            <label for="oauthdomain"><sup>*</sup>OAuth domain:</label>
+            <input type="text" id="oauthdomain" name="oauthdomain" class="text" autocomplete="off">
+            <div id="oauthdomain_w" class="fwarning" style="visibility: hidden;"></div>
+        </div>
+        <div class="field-group">
+            <label for="oauthrequesttokenURI">OAuth request token URI:</label>
+            <input type="text" id="oauthrequesttokenURI" name="oauthrequesttokenURI" class="text" autocomplete="off">
+        </div>
+        <div class="field-group">
+            <label for="oauthuserauthURI">OAuth user authorization URI:</label>
+            <input type="text" id="oauthuserauthURI" name="oauthuserauthURI" class="text" autocomplete="off">
+        </div>
+        <div class="field-group">
+            <label for="oauthaccesstokenURI">OAuth access token URI:</label>
+            <input type="text" id="oauthaccesstokenURI" name="oauthaccesstokenURI" class="text" autocomplete="off">
+        </div>
+        
+        <input id="request-acces-button" class="button" type="submit" value="Request Access" />
+    </form>
+  </div>
+
+  <br/><br/>
+  
+  <div class="oAuthConsumer">
+    <div class="oAuthConsumerTitle">Service provider catalog list</div>
+    
+    <div class="description">
+    The list of stored service provider catalogs.
+    </div>
+    
+    <table cellpadding="5">
+        <thead>
+            <tr>
+                <th id="t_title" align="left">Title</th>
+                <th id="t_rsuri" align="left">Catalog URI</th>
+                <th id="t_remove"></th>
+            </tr>
+        </thead>
+        <tbody>
+            #foreach($entity in ${entities})
+            <tr>
+                <td align="left">
+                    $!entity.getTitle()
+                </td>
+                <td align="left">
+                    $!entity.getRootServicesURI()
+                </td>
+                
+                <td>
+                    <a id="remove_rs" href="javascript:handleEntry(${entity.getID()});">
+                        <img alt="Remove" width="16px" height="16px" src="/images/icons/cancel.png" />
+                    </a>
+                </td>
+            </tr>
+            #end
+        </tbody>
+    </table>
+    
+  </div>
+
+</body>
+</html>

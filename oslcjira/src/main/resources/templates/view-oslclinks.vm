@@ -1,0 +1,308 @@
+$webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+
+<style>
+  .AppLinks table{
+    width: 130%;
+  }
+  .AppLinks th{
+    color: #666666;
+    background-color: #EAEAEA;
+  }
+  .AppLinks   {
+    width: 130%;
+  }
+  .AppLinksTitle   {
+    background-color: #D6E9F6;
+    font-weight: bold;
+    height: 20px;
+	  margin-bottom: 5px;
+    padding: 3px 6px 5px;
+  }
+  .AppLinksHeading  {
+    font-weight: bold;
+    font-size:22px;
+    margin-left: 5px;
+  }
+</style>
+
+<script type="text/javascript">
+    
+    var oauth_user_auth_window;
+    
+    function showWaitingAnimation(idx) {
+        elem = document.getElementById("waiting_animation_" + idx);
+        if (elem != null) {
+            elem.style.visibility = "visible";
+        }
+    }
+    
+    function hideWaitingAnimation(idx) {
+        elem = document.getElementById("waiting_animation_" + idx);
+        if (elem != null) {
+            elem.style.visibility = "hidden";
+        }
+    }
+    
+    // This function handles removing link by clicking on bin icon:
+    // 1. function calls REST request to plugin to remove link from remote application
+    //  1.1. if removing from remote application fails, 
+    //       function asks user to continue removal process
+    //   1.1.1. removal continues -> function calls REST request to plugin to remove link from Jira
+    //   1.1.2. removal is declined -> nothing
+    //  1.2. if removing from remote application succeed, 
+    //       function calls REST request to plugin to remove link from Jira
+    function handleAppLink(idx, shouldAsk)
+    {
+        if (shouldAsk == true) {
+            var res = confirm("Do you want to remove link?");
+            if (res == false) {
+                return;
+            }
+        }
+        
+        // First try to remove link from remote application.
+        
+        var xmlhttp;
+      	if (window.XMLHttpRequest) {
+      		  xmlhttp = new XMLHttpRequest();
+      	}
+        
+      	xmlhttp.onreadystatechange = function() 
+      	{
+            //alert("Resp from external: " + xmlhttp.readyState + " : " + xmlhttp.status);
+            if (xmlhttp.readyState == 4)
+            {
+                if (xmlhttp.status == 200) 
+                {
+                    //Removing from remote application succeed. Try to remove link from Jira.
+                    var xmlhttp2;
+                    if (window.XMLHttpRequest) {
+                        xmlhttp2 = new XMLHttpRequest();
+                    }
+                    
+                    xmlhttp2.onreadystatechange = function() 
+                    {
+                        //alert(xmlhttp2.readyState + " : " + xmlhttp2.status);
+                        if (xmlhttp2.readyState == 4)
+                        {
+                        //alert(xmlhttp2.readyState + " : " + xmlhttp2.status);
+                        
+                            if (xmlhttp2.status == 200) 
+                            {
+                                 var xelement = document.getElementById("tableRow_" + idx);
+                                 xelement.outerHTML = "";
+                                 delete xelement;
+                                 hideWaitingAnimation(idx);
+                            }
+                            else
+                            {
+                                //var message = "*";
+                                var message = getMessageFromRespond(xmlhttp2);
+                                
+                                //Removing from Jira failed.
+                                 if(message != null)
+                                  {
+                                    alert("Removing link failed!\n\n" + message); 
+                                  }
+                                  else
+                                  {
+                                    alert("Removing link failed!");
+                                  }
+                                  
+                                  hideWaitingAnimation(idx);
+                            }
+                        }
+                    };
+                    //alert("Remove link 0");
+                    
+                    //alert("Remove link A");
+                    var AppLinkVal2 = document.getElementById("AppLinkValue_" + idx).innerHTML;
+                    
+                    //alert("Remove link B");
+                    xmlhttp2.open("DELETE", "${restURL}" + "${removeOslcLinkURLFromJira}?jiraissueid=${issueID}&uritoremove=" + AppLinkVal2, true);
+                    //alert("Remove link C");       
+                    xmlhttp2.send();
+                    //alert("After");
+                }
+                else if (xmlhttp.status == 401) {
+                    var w = 600;
+                    var h = 400;
+                    
+                    var targeturl = document.getElementById("AppLinkValue_" + idx).innerHTML;
+                    var recall = "handleAppLink(" + idx + ",false)";
+                    var target = "${oauthcallback}?targeturl=" + targeturl + "&recall=" + recall;
+                    oauth_user_auth_window = window.open(
+                        target,
+                        "User authorization",
+                        "location=no,scrollbars=no,resizable=yes,menubar=no,toolbar=no,width=" + w + ",height=" + h
+                    );
+                    
+                    hideWaitingAnimation(idx);
+                }
+                else 
+                {
+                    //Removing from remote app failed. Ask for continue removing.    
+                    //var message = "*";                
+                    var message = getMessageFromRespond(xmlhttp); 
+                    
+                    if (message != null)
+                    {
+                      var res = confirm("Removing from remote application failed.\n" + message + "\n\nDo you still want to remove link?");
+                    }
+                    else
+                    {
+                      var res = confirm("Removing from remote application failed.\n\nDo you still want to remove link?");
+                    }
+                    
+                    if (res == true)
+                    {
+                        var xmlhttp2;
+                        if (window.XMLHttpRequest) {
+                            xmlhttp2 = new XMLHttpRequest();
+                        }
+                        
+                        var AppLinkVal2 = document.getElementById("AppLinkValue_" + idx).innerHTML;
+                        
+                        
+                        xmlhttp2.onreadystatechange = function() 
+                        {
+                            if (xmlhttp2.readyState == 4)
+                            {
+                                if (xmlhttp2.status == 200) 
+                                {
+                                     var xelement = document.getElementById("tableRow_" + idx);
+                                     xelement.outerHTML = "";
+                                     delete xelement;
+                                     hideWaitingAnimation(idx);
+                                }
+                                else
+                                {
+                                  var message = getMessageFromRespond(xmlhttp2);
+                                
+                                 //Removing from Jira failed.
+                                 if(message != null)
+                                  {
+                                    alert("Removing link failed!\n\n" + message);
+                                  }
+                                  else
+                                  {
+                                    alert("Removing link failed!");
+                                  }
+                                  
+                                  hideWaitingAnimation(idx);
+                                }
+                            }
+                        }
+                        
+                        xmlhttp2.open("DELETE", "${restURL}" + "${removeOslcLinkURLFromJira}?jiraissueid=${issueID}&uritoremove=" + AppLinkVal2, true);       
+                        xmlhttp2.send();
+                    }
+                    else {
+                        // continue removing rejected
+                        hideWaitingAnimation(idx);
+                    }
+                }
+            }
+      	};
+      	//alert("Remove external link 0");
+      	
+      	var AppLinkVal = document.getElementById("AppLinkValue_" + idx).innerHTML;
+      	
+      	xmlhttp.open("DELETE", "${restURL}" + "${removeOslcLinkURLFromRemoteApp}" + "?" + "jiraissueid=${issueID}&uritoremove=" + AppLinkVal, true);
+        //alert("Remove external link A");
+        showWaitingAnimation(idx);
+      	xmlhttp.send();
+    }
+
+    function getMessageFromRespond(xmlhttp_obj)
+    {
+        
+        //alert("getMessageFromRespond 0");
+        if(xmlhttp_obj != null){
+          if (xmlhttp_obj.responseText != null)
+          {
+            return xmlhttp_obj.responseText;
+          }  
+          else
+          {
+            return "";
+          }
+        }
+       /* 
+           
+           // alert("getMessageFromRespond A"); 
+            var responseXML = xmlhttp_obj.responseXML;
+           // alert(xmlhttp_obj.responseXML);
+            //alert(xmlhttp_obj.responseText);
+            
+            if(responseXML != null)
+            { 
+              //  alert("getMessageFromRespond B"); 
+                var nodeList = responseXML.getElementsByTagName("message")[0];
+                //alert("getMessageFromRespond C");                  
+                if(nodeList != null){
+                  //alert("getMessageFromRespond D");
+                  return nodeList.childNodes[0].nodeValue;
+                 
+                }
+            }
+        }
+        //alert("getMessageFromRespond C");
+        return "";
+        */
+    }
+</script>
+
+#if ($textOnly || $excelView)
+    #foreach($AppLink in ${appLinkList})
+        $textutils.htmlEncode($!{AppLink.Label}):$textutils.htmlEncode($!{AppLink.URI});
+    #end
+#else
+    
+    #if (${editable})
+    <a id="AddAppLinkA" title="Add external link" class="aui-list-item-link trigger-dialog" href="${link_addoslclinkdialog}">
+        <img alt="Add" width="16px" height="16px" src="/images/icons/add_16.gif" />
+    </a>
+    #end
+    
+    <div class="AppLinks">
+    
+    <table cellpadding="5">
+        
+        <tbody>
+        		
+            #set($idx = 1) 
+            
+            #if (${appLinkList})
+                #foreach( $AppLink in ${appLinkList})
+                  	<tr id=tableRow_${idx}>
+                  		<td align="left" >
+                  			<div >
+                            <a id="AppLink_${idx}" href=${AppLink.URI} target="_blank">${AppLink.Label}</a>         
+                  			</div>
+                  		</td>
+                  		<td align="right" >
+                  		  #if (${editable})
+                  		    <a id="removeAppLink_${idx}" title="Remove external link" href="javascript:handleAppLink(${idx},true);">
+                  		      <img alt="Remove" width="16px" height="16px" src="/images/icons/trash_16.gif" />
+              		        </a>
+              		      #end
+                  		</td >
+                  		<td align="right">
+                            <span id="waiting_animation_${idx}" style="visibility:hidden;">
+                                <img alt="Waiting" width="16px" height="16px" src="/images/icons/wait.gif" />
+                            </span>
+                        </td >
+                  		<td align="right" >
+                  		    <span id="AppLinkValue_${idx}" style="visibility:hidden;">${AppLink.URI}</span>
+                  		</td >
+                  	</tr>
+                  	#set($idx = $idx + 1) 
+                #end
+            #end
+            
+        </tbody>
+    </table>
+    
+    </div>
+#end

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<head>
+    <style>
+        #err_msg {
+            width: 90%;
+            background: #d04743;
+            color: white;
+            border-style: 1px solid #d04743;
+            border-radius: 4px;
+        }
+
+        #err_msg p {
+            width: 100%;
+            text-align: center;
+            padding: 5px;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="err_msg">
+        <p>$errorMessage</p>
+    </div>
+</body>
+</html>

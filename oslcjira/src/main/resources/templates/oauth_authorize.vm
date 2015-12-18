@@ -1,0 +1,87 @@
+<html>
+	<head>
+		<title>Connect to $applicationName</title>
+		<script
+	data-dojo-config="async: true"
+    type="text/javascript"
+    src="//ajax.googleapis.com/ajax/libs/dojo/1.7.1/dojo/dojo.js">
+</script>
+<script>
+	var lyoOAuthConfig = {
+	csrfPrevent: '$sessionId'		
+};
+</script>
+	</head>
+	<body>
+	<div id="content">
+		<h1>Authorize Application</h1>
+		<p>$consumerName is requesting access to your $applicationName data. Allow?</p>
+		<p>Only continue if you initiated this request directly from $consumerName</p>
+		<div id="error" class="error" style="display:none;"></div>
+		<form id="authorizationForm">
+			<input type="hidden" name="requestToken" value="$requestToken" />
+			<input type="hidden" id="callback" name="callback" value="$!callback" />
+			<div>
+				<input type="submit" value="Allow" />
+				<button type="button" id="deny">Deny</button>
+			</div>
+		</form>
+	</div>
+		<script>
+
+	require([ "dojo/dom", "dojo/on", "dojo/_base/event", "dojo/_base/xhr", "dojo/ready" ],
+			function(dom, on, event, xhr, ready) {
+		function showError(message) {
+			var errorNode = dom.byId('error');
+			if (message) {
+				domConstruct.empty(errorNode);
+				errorNode.appendChild(document.createTextNode(message));
+			} else {
+				errorNode.innerHTML = 'An error occurred.';
+			}
+			errorNode.style.display = 'block';
+		}
+		
+		function returnToConsumer() {
+			var callback = dom.byId('callback').value;
+			if (callback) {
+				window.location = callback;
+			} else {
+				dom.byId('content').innerHTML =
+					'<div class="message">Request authorized. Close the browser window to continue.</div>';
+			}
+		}
+		
+		function cancel() {
+			dom.byId('content').innerHTML =
+				'<div class="message">Access denied. Close the browser window to continue.</div>';
+		}
+	
+		ready(function() {
+			on(dom.byId('authorizationForm'), 'submit', function(e) {
+				event.stop(e);
+				xhr.post({
+					url : 'internal/approveToken',
+					form : 'authorizationForm',
+					headers : {
+						'X-CSRF-Prevent': lyoOAuthConfig.csrfPrevent
+					},
+					load : function() {
+						returnToConsumer();
+					},
+					error : function(error, ioArgs) {
+						showError(ioArgs.xhr.responseText);
+					}
+				});
+			});
+	
+			on(dom.byId('deny'), 'click', function(e) {
+				event.stop(e);
+				cancel();
+			});
+		});
+	});
+	</script>
+
+	</body>
+</html>

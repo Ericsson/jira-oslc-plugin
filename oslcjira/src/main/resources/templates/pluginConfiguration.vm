@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xml:lang="en-US">
+<head>
+  <title>Plugin configuration</title>
+  <meta name="decorator" content="atl.admin" />  
+  $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+</head>
+<body>  
+  <style>
+    .adminpage table{
+      width: 100%;
+    }
+    .adminPage th{
+      color: #666666;
+      background-color: #EAEAEA;
+    }
+    .adminPage   {
+      width: 990px;
+    }
+    .adminPageTitle   {
+      background-color: #D6E9F6;
+      font-weight: bold;
+      height: 20px;
+      margin-bottom: 5px;
+      padding: 3px 6px 5px;
+    }
+    .adminPageHeading  {
+      font-weight: bold;
+      font-size:22px;
+      margin-left: 5px;
+    }
+    .description  {
+      margin-left: 5px;
+    }
+
+  </style>
+  
+    <script type="text/javascript">
+
+
+    window.onload = function() {
+        //check for error
+        var errMsg = "${errorMsg}";
+        if (errMsg != null && errMsg != "") {
+            alert(errMsg);
+        }
+    }
+  </script>
+
+   
+	  <div class="adminPageHeading">
+  	Plugin configuration
+   </div>
+
+  	<div class="adminPage">
+    <div class="adminPageTitle">Filter configuration</div>
+    <div class="description">
+   	 Define the filters for projects and issue types separated by comma. Only specified projects and issue types will be visible from outside.
+    </div>
+    <form id="filterForm" action="" method="post" class="aui">
+      <div class="field-group">
+        <label for="filteredProjects">Project IDs:</label>
+    	  <input type="text" id="filteredProjects" name="filteredProjects" class="text" value="${filteredProjects}"/>
+    	</div>  
+    	<div class="field-group">
+    	  <label for="filteredTypes">Issue type IDs:</label>
+    	  <input type="text" id="filteredTypes" name="filteredTypes" class="text" value="${filteredTypes}"/>
+    	</div>
+    	<input id="submitFilterConfig" class="button" type="submit" value="Save changes" />
+    </form>
+    
+    
+
+  </div>
+</body>
+</html>

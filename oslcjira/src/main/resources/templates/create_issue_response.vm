@@ -1,0 +1,49 @@
+<html>
+
+<head>
+    <title>Create issue response</title>
+    
+    <script>
+        function doWindowName(s) {
+            var orgname = window.name;
+            window.name = s;
+            window.location = orgname;
+        }
+        
+        function doPostMessage(s) {
+            window.parent.postMessage("oslc-response:" + s, "*");
+        }
+        
+        function sendResponse() {
+            var protocol = location.hash;
+            
+            // each message (of each type) is constructed on Java side 
+            if (protocol == '#oslc-windowName-1.0') {
+                #set($responseMessageWithHtml = $responseMessage)
+                doWindowName("$responseMessageWithHtml");
+            } 
+            else if (protocol == '#oslc-postMessage-1.0') {
+                #set($responseMessageWithHtml = $responseMessage)
+                doPostMessage("$responseMessageWithHtml");
+            } 
+            else if (protocol == '#oslc-core-windowName-1.0') {
+                #set($responseCoreMessageWithHtml = $responseCoreMessage)
+                doWindowName("$responseCoreMessageWithHtml");
+            } 
+            else if (protocol == '#oslc-core-postMessage-1.0') {
+                #set($responseCoreMessageWithHtml = $responseCoreMessage)
+                doPostMessage("$responseCoreMessageWithHtml");
+            } 
+            else {
+                #set($responseCommonMessageWithHtml = $responseCommonMessage)
+                doWindowName("$responseCommonMessageWithHtml");
+                doPostMessage("$responseCommonMessageWithHtml");
+            }
+        }
+    </script>
+</head>
+
+<body onload="sendResponse()">
+</body>
+
+</html>

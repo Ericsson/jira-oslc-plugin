@@ -1,0 +1,4 @@
+$webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+
+## hidden input field with actual custom field value prevents clear after issue is updated (Edit)
+<input type="hidden" id="$customField.id" name="$customField.id" type="text" value="$textutils.htmlEncode($!value)">

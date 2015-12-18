@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html xml:lang="en-US">
+
+<head>
+  <title>Project relationships</title>
+  <meta name="decorator" content="atl.admin" />  
+  $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+</head>
+
+<body>    
+
+  <style>
+    .oAuthConsumer table{
+      width: 100%;
+    }
+    .oAuthConsumer th{
+      color: #666666;
+      background-color: #EAEAEA;
+    }
+    .oAuthConsumer   {
+      width: 990px;
+    }
+    .oAuthConsumerTitle   {
+      background-color: #D6E9F6;
+      font-weight: bold;
+      height: 20px;
+      margin-bottom: 5px;
+      padding: 3px 6px 5px;
+    }
+    .oAuthConsumerHeading  {
+      font-weight: bold;
+      font-size:22px;
+      margin-left: 5px;
+    }
+    .description  {
+      margin-left: 5px;
+    }
+  </style>
+
+  <script type="text/javascript">
+    function reloadPage() {
+        var id = document.getElementById("select_server").value;
+        //reload self with project id parameter
+        window.location = "${PrjRelationshipsURL}?serverId=" + id;
+    }
+    
+    function handleSelection() {
+        reloadPage();
+    }
+    
+    function handleEntry(id) { 
+        var xmlhttp;
+        if (window.XMLHttpRequest) {
+            xmlhttp = new XMLHttpRequest();
+        }
+        
+        xmlhttp.onreadystatechange = 
+            function() {
+                if (xmlhttp.readyState == 4) {
+                    if (xmlhttp.status == 200) {
+                        reloadPage();
+                    } 
+                    else {
+                        alert("Error " + xmlhttp.status + " - the action has not been done." );
+                    }
+                }
+            };
+            
+        xmlhttp.open("DELETE", "${removeSPURL}" + id, true);
+        xmlhttp.send();
+    }
+    
+    //reloads page after OAuth dance
+    function doReload() {
+        window.location = "${PrjRelationshipsURL}?serverId=${selectedServer}";
+    }
+
+    window.onload = function() {
+        //check for error
+        #set($errorMsgWithHtml = $errorMsg)
+        var errMsg = "${errorMsgWithHtml}";
+        if (errMsg != null && errMsg != "") {
+            alert(errMsg);
+        }
+        
+        //check for OAuth dance need
+        if ($startOAuthDance == true) {
+            //start ouath dance
+            var w = 600;
+            var h = 400;
+            
+            var target = "${oauthcallback}?targeturl=${domainRefURL}&recall=doReload()";
+            oauth_user_auth_window = window.open(
+                target,
+                "User authorization",
+                "location=no,scrollbars=no,resizable=yes,menubar=no,toolbar=no,width=" + w + ",height=" + h
+            );
+        }
+    }
+  </script>
+
+  <div class="oAuthConsumerHeading">
+    OSLC - Project relationships
+  </div>
+
+  <div class="oAuthConsumer">
+    <div class="oAuthConsumerTitle">Add project relationship</div>
+    
+    <div class="description">
+    Select server to get its service providers. Pick service providers from list and add them for
+    project.
+    </div>
+    
+    <form action="" method="post" class="aui" autocomplete="off">
+        <div class="field-group">
+            <label for="select_server">Server:</label>
+            <select id="select_server" name="select_server" class="select" onchange="handleSelection()">
+                #if($selectedServer == -1)
+                    <option value="" selected disabled>Please select server</option>
+                #else
+                    <option value="" disabled>Please select server</option>
+                #end
+                ## server is RootServicesEntity
+                #foreach($server in $servers)
+                    #set($rsid = $server.getID())
+                    #if($rsid == $selectedServer)
+                        <option value="${rsid}" selected>${server.getTitle()}</option>
+                    #else
+                        <option value="${rsid}">${server.getTitle()}</option>
+                    #end
+                #end
+            </select>
+        </div>
+        <div class="field-group">
+            <label for="service_provider_select">Service providers:</label>
+            <select multiple id="service_provider_select" name="service_provider_select" class="select" size="10">
+                #if($providers.size() > 0)
+                    #set($cnt = $providers.size() / 2 - 1)
+                    #foreach($i in [0..$cnt])
+                        #set($idx1 = $i * 2)
+                        #set($idx2 = $i * 2 + 1)
+                        <option value="${providers.get($idx1)} ${providers.get($idx2)}">${providers.get($idx1)}</option>
+                    #end
+                #end
+            </select>
+        </div>
+        <input id="add-button" class="button" type="submit" value="Add" />
+    </form>
+  </div>
+
+  <br/><br/>
+  
+  <div class="oAuthConsumer">
+    <div class="oAuthConsumerTitle">Project relationships</div>
+    
+    <div class="description">
+    List of selected service providers from server.
+    </div>
+    
+    <table cellpadding="5">
+        <thead>
+            <tr>
+                <th id="t_title" align="left">Server</th>
+                <th id="t_rsuri" align="left">Service provider</th>
+                <th id="t_remove"></th>
+            </tr>
+        </thead>
+        <tbody>
+            #foreach($savedProvider in ${savedProviders})
+            <tr>
+                <td align="left">
+                $savedProvider.getServerTitle()
+                </td>
+                <td align="left">
+                $savedProvider.getTitle()
+                </td>
+                <td>
+                    <a id="remove_rs" href="javascript:handleEntry(${savedProvider.getID()});">
+                        <img alt="Remove" width="16px" height="16px" src="/images/icons/cancel.png" />
+                    </a>
+                </td>
+            </tr>
+            #end
+        </tbody>
+    </table>
+    
+  </div>
+
+</body>
+</html>

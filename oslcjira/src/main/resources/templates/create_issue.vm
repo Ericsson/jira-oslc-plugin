@@ -1,0 +1,171 @@
+<html>
+
+<head>
+    <title>Create issue</title>
+    <meta name="decorator" content="popup" />
+    
+    <style>
+        #whole {
+            width: 870px;
+            background: white;
+        }
+        
+        #create_issue_form {
+            width: 100%;
+        }
+        
+        #scrolling_content {
+            width: 100%;
+            height: 460px;
+            overflow: auto;
+        }
+        
+        #buttons_panel {
+            width: 100%;
+        }
+        
+        /*#create-issue-submit-bottom {
+            float: right;
+            margin-top: 20px;
+            margin-right: 20px;
+        }*/
+        
+        sup {
+            color: red;
+        }
+        
+        .to_right {
+            float: right;
+            margin-top: 20px;
+            margin-right: 20px;
+        }
+        
+        .fwarning {
+            padding-left: 0px;
+            color: red;
+        }
+        
+        #create_warning {
+            padding-right: 10px;
+        }
+        
+    </style>
+    
+    <script>
+        function resetWarning(w) {
+            w.style.visibility = "hidden";
+            w.innerHTML = "";
+        }
+        
+        function setWarning(w, text) {
+            w.style.visibility = "visible";
+            w.innerHTML = text;
+        }
+        
+        function basicCheck(value, warning_field, warning_text) {
+            resetWarning(warning_field);
+            if (value == null || value == "") {
+                setWarning(warning_field, warning_text);
+                return false;
+            }
+        }
+    
+        function pswCheck(value, expected, warning_field, warning_text) {
+            resetWarning(warning_field);
+            if (value == null || value == "" || value != expected) {
+                setWarning(warning_field, warning_text);
+                return false;
+            }
+            return true;
+        }
+        
+        function validateForm() {
+            var result = true;
+            
+            //validate summary
+            if (basicCheck(document.getElementById("summary").value, 
+                           document.getElementById("summary_w"), "You must enter summary!") == false)
+                result = false;
+            
+            //validate reporter
+            var sel = document.getElementById("reporter");
+            var val = sel.options[sel.selectedIndex].value;
+            var txt = sel.options[sel.selectedIndex].text;
+            var wrn = document.getElementById("reporter_w");
+            if (basicCheck(val, wrn, "You must enter reporter!") == false ||
+                basicCheck(txt, wrn, "You must enter reporter!") == false)
+                result = false;
+            
+            var glob_wrn = document.getElementById("create_warning");
+            resetWarning(glob_wrn);
+            var hasErrors = $hasErrors;
+            if (result == false || hasErrors == true) {
+                setWarning(glob_wrn, "There are errors in form!");
+            }
+            
+            return result;
+        }
+        
+        window.onload = function() {
+            var h = document.getElementById('header');
+            var f = document.getElementById('footer');
+            if (h != null) {
+                h.style.display = 'none';
+            }
+            if (f != null) {
+                f.style.display = 'none';
+            }
+            
+            var glob_wrn = document.getElementById("create_warning");
+            resetWarning(glob_wrn);
+            var hasErrors = $hasErrors;
+            if (hasErrors == true) {
+                setWarning(glob_wrn, "There are errors in form!");
+            }
+        }
+    </script>
+</head>
+
+<body class="styled">
+
+<div id="whole">
+    <div class="jira-dialog-heading">
+        <h2 title="Create Issue">Create Issue</h2>
+    </div>
+    
+    <form id="create_issue_form" action="" method="post" class="aui" onsubmit="return validateForm()">
+        <input type="hidden" name="projectId" value="${currentProjectId}">
+        <input type="hidden" name="issueType" value="${currentIssueType}">
+        
+        <div id="scrolling_content">
+                
+            <table id="create_issue_table">
+                <tr class="fieldArea" id="summaryFieldArea">
+                    <td class="fieldLabelArea" >
+                        <label for="type">Issue Type:</label>
+                    </td>
+                    <td class="fieldValueArea">
+                        #set($typeViewWithHtml = $!typeView)
+                        $typeViewWithHtml
+                    </td>
+                </tr>
+                #foreach( $field in ${fields} )
+                    #set($fieldWithHtml = $!field)
+                    $fieldWithHtml
+                #end
+            </table>
+            
+        </div>
+        
+        <div class="buttons_panel">
+            <div class="to_right">
+                <span id="create_warning" class="fwarning" style="visibility: hidden;"></span>
+                <input id="create-issue-submit-bottom" class="button" type="submit" value="Create">
+            </div>
+        </div>
+    </form>
+<div>
+
+</body>
+
+</html>

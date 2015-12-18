@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title>XProduct Admin</title>
+    <meta name="decorator" content="atl.admin">
+    $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+  </head>
+  <body>
+    <form id="admin">
+      <div>
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name">
+      </div>
+      <div>
+        <label for="time">Time</label>
+        <input type="text" id="time" name="time">
+      </div>
+      <div>
+        <input type="submit" value="Save">
+      </div>
+    </form>
+  </body>
+</html>

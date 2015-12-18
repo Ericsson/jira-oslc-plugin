@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	
+	<!-- definition of simple elements -->
+	
+	<!-- project in element element configurations/configuration/projects -->
+	<xs:element name="project" type="xs:positiveInteger"/>
+	
+	<!-- issueType in element element configurations/configuration/issueTypes -->
+	<xs:element name="issueType" type="xs:positiveInteger"/>
+	
+	<!-- domain in element element configurations/configuration/domains -->
+	<xs:element name="domain" type="xs:string"/>
+	
+	<!-- attribute in field element -->
+	<xs:simpleType name="fieldTypetype">
+	  <xs:restriction base="xs:string">
+	    <xs:enumeration value="custom"/>
+	  </xs:restriction>
+	</xs:simpleType>
+	
+	<!-- attribute in field and templateField element (only in mappingIn) -->
+	<xs:simpleType name="actiontype">
+	  <xs:restriction base="xs:string">
+	    <xs:enumeration value="create"/>
+	    <xs:enumeration value="update"/>
+	  </xs:restriction>
+	</xs:simpleType>
+	
+	<!-- attribute in templateField element -->
+	<xs:simpleType name="contentTypetype">
+	  <xs:restriction base="xs:string">
+	    <xs:enumeration value="html"/>
+	  </xs:restriction>
+	</xs:simpleType>
+	
+	<!-- definition of complex elements -->
+	
+	<!-- projects in element element configurations/configuration -->
+	<xs:element name="projects">
+	  <xs:complexType>
+	    <xs:sequence maxOccurs="unbounded">
+	      <xs:element ref="project" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- issueTypes in element element configurations/configuration -->
+	<xs:element name="issueTypes">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element ref="issueType" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- domains in element element configurations/configuration -->
+	<xs:element name="domains">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element ref="domain" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- errorLog in element element configurations/configuration -->
+	<xs:element name="errorLog">
+	  <xs:complexType>
+	    <xs:attribute name="name" type="xs:string" use="required"/>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- default in element element configurations/configuration/mappings/mappingIn/xmlFields/field
+				or configurations/configuration/mappings/mappingIn/fields/field  -->
+	<xs:element name="default">
+	  <xs:complexType>
+	    <xs:attribute name="value" type="xs:string" use="required"/>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- map in element element configurations/configuration/mappings/mappingIn/xmlFields/field/maps
+				or configurations/configuration/mappings/mappingIn/fields/field/maps  -->
+	<xs:element name="map">
+	  <xs:complexType>
+	    <xs:attribute name="key" type="xs:string" use="required"/>
+	    <xs:attribute name="value" type="xs:string" use="required"/>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- maps in element element configurations/configuration/mappings/mappingIn/xmlFields/field
+				or configurations/configuration/mappings/mappingIn/fields/field  -->
+	<xs:element name="maps">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element ref="map" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- field in element element configurations/configuration/mappings/mappingIn/xmlFields  -->
+	<xs:element name="field">
+	  <xs:complexType>
+	    <xs:all>
+	      <xs:element ref="maps" minOccurs="0" />
+	      <xs:element ref="default" minOccurs="0" />
+	    </xs:all>
+	    <xs:attribute name="xpath" type="xs:anyURI" use="required"/>
+	    <xs:attribute name="id" type="xs:string" />
+	    <xs:attribute name="mapTo" type="xs:string" />
+	    <xs:attribute name="fieldType" type="fieldTypetype" />
+	    <xs:attribute name="notifyChange" type="xs:boolean" />
+	    <xs:attribute name="action" type="actiontype" />
+	    <xs:attribute name="encodeHtml" type="xs:boolean" />
+	    <xs:attribute name="fromDateFormat" type="xs:string" />
+	    <xs:attribute name="toDateFormat" type="xs:string" />
+	    <xs:attribute name="keepTags" type="xs:boolean" />
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- xmlFields in element configurations/configuration/mappings/mappingIn  -->	
+	<xs:element name="xmlFields">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element ref="field" minOccurs="0" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	    <xs:attribute name="ns" type="xs:anyURI" use="required"/>
+	    <xs:attribute name="name" type="xs:string" use="required"/>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- template in element configurations/configuration/mappings/mappingIn/templateFields/templateField  
+				or configurations/configuration/mappings/mappingOut/templateFields/templateField -->	
+	<xs:element name="template" >
+	  <xs:complexType mixed="true">
+	    <xs:sequence >
+	      <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- templateField in element configurations/configuration/mappings/mappingIn/templateFields  -->	
+	<xs:element name="templateField">
+	  <xs:complexType>
+	    <xs:all>
+	      <xs:element ref="maps" minOccurs="0" />
+	      <xs:element ref="default" minOccurs="0"/>
+	      <xs:element ref="template" />
+	    </xs:all>
+	    <xs:attribute name="mapTo" type="xs:string" use="required"/>
+	    <xs:attribute name="fieldType" type="fieldTypetype" />
+	    <xs:attribute name="notifyChange" type="xs:boolean" />
+	    <xs:attribute name="action" type="actiontype" />
+	    <xs:attribute name="encodeHtml" type="xs:boolean" />
+	    <xs:attribute name="contentType" type="contentTypetype" />
+	    <xs:attribute name="idPrefix" type="xs:string"/>
+	    <xs:attribute name="idSuffix" type="xs:string"/>
+	    <xs:attribute name="alwaysSave" type="xs:boolean"/>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- templateFields in element configurations/configuration/mappings/mappingIn  -->	
+	<xs:element name="templateFields">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element ref="templateField" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- header in element configurations/configuration/mappings/mappingOut/connection/headers  -->
+	<xs:element name="header">
+	  <xs:complexType>
+	    <xs:attribute name="name" type="xs:string" use="required"/>
+	    <xs:attribute name="value" type="xs:string" use="required"/>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- headers in element configurations/configuration/mappings/mappingOut/connection  -->
+	<xs:element name="headers">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element ref="header" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- rdfType in element configurations/configuration/mappings/mappingOut/connection/rdfTypes  -->
+	<xs:element name="rdfType">
+	  <xs:complexType>
+	    <xs:attribute name="value" type="xs:anyURI" use="required"/>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- rdfTypes in element configurations/configuration/mappings/mappingOut/connection  -->
+	<xs:element name="rdfTypes">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element ref="rdfType" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- connection in element configurations/configuration/mappings/mappingOut  -->
+	<xs:element name="connection">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element ref="headers" />
+	      <xs:element ref="rdfTypes" />
+	    </xs:sequence>
+	    <xs:attribute name="username" type="xs:string" use="required"/>
+	    <xs:attribute name="password" type="xs:string" use="required" />
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- fields in element configurations/configuration/mappings/mappingIn  -->
+	<xs:element name="fields">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element name="field" maxOccurs="unbounded">
+	        <xs:complexType>
+	          <xs:all>
+				      <xs:element ref="maps" minOccurs="0" />
+				      <xs:element ref="default" minOccurs="0" />
+				    </xs:all>
+	          <xs:attribute name="ns" type="xs:anyURI" use="required"/>
+	          <xs:attribute name="name" type="xs:string" use="required"/>
+	          <xs:attribute name="id" type="xs:string" />
+	          <xs:attribute name="mapTo" type="xs:string" />
+	          <xs:attribute name="fieldType" type="fieldTypetype" />
+	          <xs:attribute name="notifyChange" type="xs:boolean" />
+	          <xs:attribute name="action" type="actiontype" />
+	          <xs:attribute name="encodeHtml" type="xs:boolean" />
+	          <xs:attribute name="fromDateFormat" type="xs:string" />
+	          <xs:attribute name="toDateFormat" type="xs:string" />
+	          <xs:attribute name="keepTags" type="xs:boolean" />
+	        </xs:complexType>
+	      </xs:element>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- mappingIn in element configurations/configuration/mappings -->
+	<xs:element name="mappingIn">
+	  <xs:complexType>
+	    <xs:all>
+	      <xs:element ref="xmlFields" minOccurs="0" />
+	      <xs:element ref="templateFields" minOccurs="0" />
+	      <xs:element ref="fields" minOccurs="0" />
+	    </xs:all>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- mappingOut in element configurations/configuration/mappings -->
+	<xs:element name="mappingOut">
+	  <xs:complexType>
+	    <xs:all>
+	      <xs:element ref="connection" minOccurs="0" />
+	      <!-- fields in element configurations/configuration/mappings/mappingOut  -->
+	      <xs:element name="fields" minOccurs="0" >
+	        <xs:complexType>
+				    <xs:sequence>
+				      <xs:element name="field" maxOccurs="unbounded">
+				        <xs:complexType>
+				          <xs:attribute name="name" type="xs:string" use="required"/>
+				          <xs:attribute name="id" type="xs:string" use="required"/>
+				          <xs:attribute name="fieldType" type="fieldTypetype" />
+				          <xs:attribute name="encodeHtml" type="xs:boolean" />
+				        </xs:complexType>
+				      </xs:element>
+				    </xs:sequence>
+	 				</xs:complexType>
+	 			</xs:element>
+	 			<!-- templateFields in element configurations/configuration/mappings/mappingOut  -->	 
+	      <xs:element name="templateFields" minOccurs="0" >
+				  <xs:complexType>
+				    <xs:sequence>
+				      <xs:element name="templateField" maxOccurs="unbounded">
+				        <xs:complexType>
+							    <xs:sequence>
+							      <xs:element ref="template" />
+							    </xs:sequence>
+							    <xs:attribute name="ns" type="xs:anyURI" use="required"/>
+							    <xs:attribute name="name" type="xs:string" use="required"/>
+							    <xs:attribute name="idPrefix" type="xs:string"/>
+							    <xs:attribute name="idSuffix" type="xs:string"/>
+							    <xs:attribute name="contentType" type="contentTypetype" />
+							  </xs:complexType>
+				      </xs:element>	
+				    </xs:sequence>
+				  </xs:complexType>
+	      </xs:element>	
+	    </xs:all>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- mappings in element configurations/configuration -->
+	<xs:element name="mappings">
+	  <xs:complexType>
+	    <xs:all>
+	      <xs:element ref="mappingIn" minOccurs="0"/>
+	      <xs:element ref="mappingOut" minOccurs="0"/>
+	    </xs:all>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- configuration in element configurations -->
+	<xs:element name="configuration">
+	  <xs:complexType>
+	    <xs:all>
+	      <xs:element ref="projects" />
+	      <xs:element ref="issueTypes" />
+	      <xs:element ref="domains" minOccurs="0"/>
+	      <xs:element ref="errorLog" minOccurs="0"/>
+	      <xs:element ref="mappings" />
+	    </xs:all>
+	  </xs:complexType>
+	</xs:element>
+	
+	<!-- configurations in root element -->
+	<xs:element name="configurations">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element ref="configuration" minOccurs="1" maxOccurs="unbounded"/>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+
+</xs:schema>
