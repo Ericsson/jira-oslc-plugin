@@ -3,6 +3,7 @@ Technical documentation
 ## Introduction
 OSLC adapter described in this document is designed to bring Jira users possibility to link issues
 with (equivalent) objects in similar products further called external systems.
+
 ![](./tech_doc_diagram.png) 
 
 Adapter is created as plugin for Jira product. It is released as single jar file, which can be installed
