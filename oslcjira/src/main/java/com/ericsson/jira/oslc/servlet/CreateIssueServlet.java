@@ -43,9 +43,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import webwork.action.Action;
 
-import com.atlassian.crowd.embedded.api.User;
+
+
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.IssueService.CreateValidationResult;
 import com.atlassian.jira.bc.issue.IssueService.IssueResult;
@@ -68,7 +68,7 @@ import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.Permissions;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
+
 import com.atlassian.jira.util.ErrorCollection;
 import com.atlassian.jira.util.JiraUtils;
 import com.atlassian.jira.util.VelocityParamFactory;
@@ -79,6 +79,9 @@ import com.ericsson.jira.oslc.exceptions.PermissionException;
 import com.ericsson.jira.oslc.managers.PermissionManager;
 import com.ericsson.jira.oslc.utils.OSLCUtils;
 import com.ericsson.jira.oslc.utils.ServletUtils;
+
+import webwork.action.Action;
+
 
 /**
  * Inner class for creating operation context during creation issue
@@ -546,7 +549,7 @@ public class CreateIssueServlet extends HttpServlet
         fix_version = "-1";
       }
       
-      User user = ApplicationUsers.toDirectoryUser(aUser);
+
       
       JiraAuthenticationContext authenticationContext = ComponentAccessor.getJiraAuthenticationContext();
       authenticationContext.setLoggedInUser(aUser);
@@ -568,7 +571,7 @@ public class CreateIssueServlet extends HttpServlet
       issueInputParameters.setDescription(description);
       issueInputParameters.setOriginalAndRemainingEstimate(timetracking_originalestimate, timetracking_remainingestimate);
       
-      CreateValidationResult createValidationResult = issueService.validateCreate(user, issueInputParameters);
+      CreateValidationResult createValidationResult = issueService.validateCreate(aUser, issueInputParameters);
       //validate issue parameters
       if (!createValidationResult.isValid()) {
         ErrorCollection ec = createValidationResult.getErrorCollection();
@@ -578,7 +581,7 @@ public class CreateIssueServlet extends HttpServlet
       }
       
       //create issue from validated parameters
-      IssueResult createResult = issueService.create(user, createValidationResult);
+      IssueResult createResult = issueService.create(aUser, createValidationResult);
       if (!createResult.isValid()) {
         StringBuilder sb = new StringBuilder();
         sb.append("Create issue failed!\n");

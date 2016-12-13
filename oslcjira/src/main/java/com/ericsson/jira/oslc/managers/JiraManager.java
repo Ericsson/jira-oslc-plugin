@@ -124,7 +124,7 @@ public class JiraManager {
     long prjid = Long.parseLong(projectKeyString);
     Project prj = projectManager.getProjectObj(prjid);
     
-    ApplicationUser appUser = PermissionManager.getAppUserFromRequest(httpServletRequest);
+    ApplicationUser appUser = PermissionManager.getAppUser(httpServletRequest);
     PermissionManager.checkPermission(appUser, prj, Permissions.BROWSE);
     
     IssueManager issueManager = ComponentAccessor.getIssueManager();
@@ -142,7 +142,7 @@ public class JiraManager {
     Iterator<Long> it = ids.iterator();
     while (it.hasNext())
     {
-      final IssueService.IssueResult issueResult = issueService.getIssue(user, it.next());
+      final IssueService.IssueResult issueResult = issueService.getIssue(appUser, it.next());
       final MutableIssue issue = issueResult.getIssue();
       
       if(!PermissionManager.hasPermission(appUser, issue, Permissions.BROWSE)){
@@ -232,7 +232,7 @@ public class JiraManager {
       String userName = PermissionManager.getUserName(httpServletRequest);
       UserManager um = ComponentAccessor.getComponent(UserManager.class);
       ApplicationUser appUser = um.getUserByName(userName);
-      User user = ApplicationUsers.toDirectoryUser(um.getUserByName(userName));
+      
       JiraAuthenticationContext authenticationContext = ComponentAccessor.getJiraAuthenticationContext();
       authenticationContext.setLoggedInUser(appUser);
 
@@ -250,7 +250,7 @@ public class JiraManager {
       jcr.setProject(p.getKey());
 
       if(jcr.getReporter() == null || jcr.getReporter().isEmpty()){
-        jcr.setReporter(user.getName());
+        jcr.setReporter(appUser.getName());
       }
 
       SyncConfiguration leanSyncConfiguration = SyncUtils.getLeanSyncConfiguration(jcr, null);
@@ -288,7 +288,7 @@ public class JiraManager {
         }
 
         IssueService issueService = ComponentAccessor.getComponent(IssueService.class);
-        IssueValidationResult validationResult = issueService.validateCreate(user, issueInputParams);
+        IssueValidationResult validationResult = issueService.validateCreate(appUser, issueInputParams);
 
         if (!validationResult.isValid()) {
           logger.warn("Create issue - parameters are not valid.");
@@ -296,7 +296,7 @@ public class JiraManager {
           throwErrorException(errorCollection);
         }
 
-        IssueResult issueResult = issueService.create(user, (CreateValidationResult)validationResult);
+        IssueResult issueResult = issueService.create(appUser, (CreateValidationResult)validationResult);
         if (!issueResult.isValid()) {
           logger.warn("Error during creating issue");
           ErrorCollection errorCollection = issueResult.getErrorCollection();
@@ -307,7 +307,7 @@ public class JiraManager {
         if (createdIssue != null && syncType == null) {
           List<String> cList = jcr.getComponents();
           Collection<ProjectComponent> toSet1 = FieldManager.componentsToSet(createdIssue, cList);
-          createdIssue.setComponentObjects(toSet1);
+          createdIssue.setComponent(toSet1);
 
           List<String> avList = jcr.getAffectsVersions();
           Collection<Version> toSet2 = FieldManager.versionsToSet(createdIssue, avList);
@@ -364,7 +364,7 @@ public class JiraManager {
       }
       
       List<com.atlassian.jira.project.Project> filteredProjects = new ArrayList<Project>();
-      ApplicationUser appUser = PermissionManager.getAppUserFromRequest(httpServletRequest);
+      ApplicationUser appUser = PermissionManager.getAppUser(httpServletRequest);
       
       PluginConfig config = PluginConfig.getInstance();
       Set<Long> filteredProjectIDs = config.getFilteredProjects();
@@ -624,18 +624,17 @@ public class JiraManager {
     
     IssueInputParameters issueInputParameters = new IssueInputParametersImpl();
     
-    ApplicationUser aUser = ComponentAccessor.getJiraAuthenticationContext().getUser();
-    User user = ApplicationUsers.toDirectoryUser(aUser);
+    ApplicationUser appUser = ComponentAccessor.getJiraAuthenticationContext().getUser();
     
     TransitionValidationResult validationResult = issueService.validateTransition(
-        user, issue.getId(), actionId, issueInputParameters);
+        appUser, issue.getId(), actionId, issueInputParameters);
     if (validationResult.isValid() == false) {
       logger.warn("Change issue state - parameters are not valid.");
       ErrorCollection errorCollection = validationResult.getErrorCollection();
       throwErrorException(errorCollection);
     }
     
-    transResult = issueService.transition(user, validationResult);
+    transResult = issueService.transition(appUser, validationResult);
     if (transResult.isValid() == false) {
       logger.warn("Error during issue state change!");
       ErrorCollection errorCollection = transResult.getErrorCollection();
@@ -673,7 +672,7 @@ public class JiraManager {
     ApplicationUser appUser = um.getUserByName(userName);
     JiraAuthenticationContext authenticationContext = ComponentAccessor.getJiraAuthenticationContext();
     authenticationContext.setLoggedInUser(appUser);    
-    User user = ApplicationUsers.toDirectoryUser(um.getUserByName(userName));
+
     IssueService issueService = ComponentAccessor.getIssueService();
     
     if (selectedProperties != null && selectedProperties.isEmpty()) {
@@ -726,14 +725,14 @@ public class JiraManager {
         }
       }
 
-      IssueValidationResult validationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
+      IssueValidationResult validationResult = issueService.validateUpdate(appUser, issue.getId(), issueInputParams);
       if (!validationResult.isValid()) {
         logger.warn("Update issue - parameters are not valid.");
         ErrorCollection errorCollection = validationResult.getErrorCollection();
         throwErrorException(errorCollection);
       }
 
-      IssueService.IssueResult issueResult = issueService.update(user, (UpdateValidationResult)validationResult);
+      IssueService.IssueResult issueResult = issueService.update(appUser, (UpdateValidationResult)validationResult);
       if (!issueResult.isValid()) {
         logger.warn("Error during updating issue");
         ErrorCollection errorCollection = issueResult.getErrorCollection();
@@ -749,15 +748,15 @@ public class JiraManager {
         }
 
         if (OSLCUtils.allowUpdate(selectedProperties, Constants.JIRA_TYPE_LABEL)) {
-          FieldManager.updateLabels(updatedIssue, jcr, user);
+          FieldManager.updateLabels(updatedIssue, jcr, appUser);
         }
 
         if (OSLCUtils.allowUpdate(selectedProperties, Constants.JIRA_TYPE_VOTER)) {
-          FieldManager.updateVoters(updatedIssue, jcr, user);
+          FieldManager.updateVoters(updatedIssue, jcr);
         }
 
         if (OSLCUtils.allowUpdate(selectedProperties, Constants.JIRA_TYPE_WATCHER)) {
-          FieldManager.updateWatchers(updatedIssue, jcr, user);
+          FieldManager.updateWatchers(updatedIssue, jcr);
         }
       }
     } catch (Exception e) {

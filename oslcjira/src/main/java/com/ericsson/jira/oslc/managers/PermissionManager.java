@@ -67,7 +67,7 @@ public class PermissionManager {
   public static void checkPermission(final HttpServletRequest request, final Issue issue, int permission) throws PermissionException {
     ApplicationUser appUser = null;
     if (request != null) {
-      appUser = getAppUserFromRequest(request);
+      appUser = getAppUser(request);
     }
     if (appUser == null) {
       appUser = getLoggedUser();
@@ -240,9 +240,17 @@ public class PermissionManager {
    * @param request HttpServletRequest
    * @return logged user
    */
-  public static ApplicationUser getAppUserFromRequest(final HttpServletRequest request){
+  public static ApplicationUser getAppUser(final HttpServletRequest request){
     String userName = getUserName(request);
-    
+    return getAppUser(userName);
+  }
+  
+  /**
+   * Returns a logged user
+   * @param request HttpServletRequest
+   * @return logged user
+   */
+  public static ApplicationUser getAppUser(String userName){
     if(userName != null && !userName.trim().isEmpty()){
       UserManager um = ComponentAccessor.getComponent(UserManager.class);
       ApplicationUser appUser = um.getUserByName(userName);
@@ -251,6 +259,7 @@ public class PermissionManager {
     
     return null;
   }
+
   
   /**
    * Returns logged user

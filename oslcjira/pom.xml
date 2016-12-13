@@ -217,8 +217,8 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -226,7 +226,7 @@
     </build>
     <properties>
         <buildDirectory>${project.basedir}/target</buildDirectory>
-        <jira.version>6.3.6</jira.version>
+        <jira.version>7.1.4</jira.version>
         <amps.version>5.0.4</amps.version>
         <plugin.testrunner.version>1.2.0</plugin.testrunner.version>
         <!-- TestKit version 5.x for JIRA 5.x, 6.x for JIRA 6.x -->

@@ -352,10 +352,10 @@ public class FieldManager {
    * @param jcr JIRA Change request
    * @param user the updated will be done by the user
    */
-  public static void updateLabels(MutableIssue issue, JiraChangeRequest jcr, User user) {
+  public static void updateLabels(MutableIssue issue, JiraChangeRequest jcr, ApplicationUser appUser) {
     Set<String> names = jcr.getLabels();
     LabelManager lMngr = ComponentAccessor.getComponent(LabelManager.class);
-    lMngr.setLabels(user, issue.getId(), names, false, false);
+    lMngr.setLabels(appUser, issue.getId(), names, false, false);
   }
   
   /**
@@ -364,7 +364,7 @@ public class FieldManager {
    * @param jcr JIRA Change request
    * @param user the updated will be done by the user
    */
-  public static void updateVoters(MutableIssue issue, JiraChangeRequest jcr, User user) {
+  public static void updateVoters(MutableIssue issue, JiraChangeRequest jcr) {
     List<String> names = jcr.getVoters();
     
     List<ApplicationUser> newVoters = new ArrayList<ApplicationUser>();
@@ -398,7 +398,7 @@ public class FieldManager {
    * @param jcr JIRA Change request
    * @param user the updated will be done by the user
    */
-  public static void updateWatchers(MutableIssue issue, JiraChangeRequest jcr, User user) {
+  public static void updateWatchers(MutableIssue issue, JiraChangeRequest jcr) {
     List<String> names = jcr.getWatchers();
     
     List<ApplicationUser> newWatchers = new ArrayList<ApplicationUser>();

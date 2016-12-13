@@ -36,10 +36,10 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
-import net.oauth.OAuthException;
-import net.oauth.OAuthMessage;
-import net.oauth.OAuthProblemException;
-import net.oauth.server.OAuthServlet;
+
+
+
+
 
 import org.apache.xml.security.exceptions.Base64DecodingException;
 import org.apache.xml.security.utils.Base64;
@@ -51,16 +51,23 @@ import org.eclipse.lyo.server.oauth.core.utils.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.atlassian.crowd.embedded.api.User;
+
 import com.atlassian.jira.bc.security.login.LoginResult;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.security.login.LoginManager;
-import com.atlassian.jira.user.ApplicationUsers;
-import com.atlassian.jira.user.util.UserManager;
+import com.atlassian.jira.user.ApplicationUser;
+
 import com.ericsson.jira.oslc.Credentials;
 import com.ericsson.jira.oslc.constants.JiraConstants;
 import com.ericsson.jira.oslc.handlers.OAuthHandler;
+import com.ericsson.jira.oslc.managers.PermissionManager;
 import com.ericsson.jira.oslc.services.OAuthServices;
+
+import net.oauth.OAuthException;
+import net.oauth.OAuthMessage;
+import net.oauth.OAuthProblemException;
+import net.oauth.server.OAuthServlet;
+
 
 /**
  * Called by the web container when a request is processed
@@ -349,8 +356,14 @@ public class CredentialsFilter implements Filter {
     response.resetBuffer();
     
     ServletOutputStream outputStream = response.getOutputStream();
-    outputStream.write(e.getMessage().getBytes());    
+    String message = e.getMessage();
+    if(message == null){
+      message = "Unknown authorized error";
+    }
+    
+    outputStream.write(message.getBytes());    
   }
+
 
   /**
    * Authenticate a request with basic authentication
@@ -363,17 +376,17 @@ public class CredentialsFilter implements Filter {
     logger.debug("CredetialFilter - basicAuthenticate");
     
     Credentials credentials = getCredentials(httpRequest);
+
+    ApplicationUser appUser = PermissionManager.getAppUser(credentials.getUsername());
     
-    UserManager userManager = ComponentAccessor.getComponent(UserManager.class);
-    User user = ApplicationUsers.toDirectoryUser(userManager.getUserByName(credentials.getUsername()));
-    if (user == null) {
+    if (appUser == null) {
       logger.warn("User is not registered in the system");
       throw new UnauthorizedException("User is not registered in the system");
     }
     
    
     LoginManager loginManager = (LoginManager)ComponentAccessor.getComponent(LoginManager.class);
-    LoginResult result = loginManager.authenticate(user, credentials.getPassword());
+    LoginResult result = loginManager.authenticate(appUser, credentials.getPassword());
     if (result.isOK()) {
       logger.debug("CredentialsFilter request - user authorized " + credentials.getUsername() + "authorized");
       httpRequest.setAttribute(USERNAME_ATTRIBUTE, credentials.getUsername());
@@ -383,6 +396,7 @@ public class CredentialsFilter implements Filter {
       throw new UnauthorizedException("Verification of user failed.");
     }
   }
+
 
   /**
    * Get the credentials for the request
