@@ -41,7 +41,7 @@ To build plugin from source, follow next steps:
  4. Locate resulting jar file with plugin
  
 Note: Atlassian plugin SDK doesn't install all dependencies, even if they are provided. Instead all dependencies
-defined in pom.xml will be downloaded during first build attempt. For this reason, developer station with internet
+defined in pom.xml will be downloaded during first build attempt. For this reason, developer sation with internet
 connection is strongly recommended.
 
 ## Plugin overview
