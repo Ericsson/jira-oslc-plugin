@@ -33,8 +33,10 @@ project (e.g. adding components, building, etc.).
 Plugin is possible to develop using Eclipse IDE. Atlassian SDK provides special command to convert maven project
 to eclipse project.
 
+Install the SDk from: https://developer.atlassian.com/docs/getting-started/set-up-the-atlassian-plugin-sdk-and-build-a-project.
+
 ## Building plugin
-To build plugin from source, follow next steps:
+To build plugin from source you will need to have the Atlassian SDK installed and added to your path. Then:
  1. Get plugin project
  2. Locate pom.xml file and from that location execute atlas-package command
  3. After successful build, locate new folder "target" created in plugin project folder
